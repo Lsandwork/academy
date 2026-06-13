@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  STAFF
+  ADMIN
+}
+
+enum AccessLevel {
+  FREE
+  SINGLE_LESSON
+  MONTHLY
+  LIFETIME
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  name               String?
+  avatarUrl          String?
+  role               Role                @default(USER)
+  accessLevel        AccessLevel         @default(FREE)
+  creditBalance      Int                 @default(0)
+  purchasedLessonIds String              @default("[]")
+  completedLessonIds String              @default("[]")
+  favoriteLessonIds  String              @default("[]")
+  lastOpenedLessonId String?
+  assessmentResult   String?
+  stripeCustomerId   String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  creditTransactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  reason      String
+  lessonId    String?
+  createdById String?
+  createdAt   DateTime @default(now())
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  severity  String
+  area      String
+  message   String
+  userEmail String?
+  url       String?
+  device    String?
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+}
+
+model AiAssistLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  sessionId       String?
+  lessonId        String?
+  pageUrl         String?
+  actionType      String
+  promptTokens    Int?
+  responseTokens  Int?
+  responseTimeMs  Int?
+  status          String
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+}
+
+model LessonAiSummary {
+  id              String   @id @default(cuid())
+  lessonId        String   @unique
+  lessonTitle     String
+  summaryJson     String
+  model           String
+  contentHash     String
+  lastGeneratedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AiHealthCheck {
+  id             String   @id @default(cuid())
+  service        String
+  status         String
+  responseTimeMs Int?
+  errorMessage   String?
+  metadata       String?
+  createdAt      DateTime @default(now())
+}
