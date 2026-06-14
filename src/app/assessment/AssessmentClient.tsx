@@ -51,6 +51,9 @@ export default function AssessmentClient({ user }: { user: SafeUser }) {
           <Link href={`/library/${result.trackId}`} className="mt-8 inline-flex rounded-full bg-orange px-6 py-3 font-bold text-white">
             Start Recommended Track →
           </Link>
+          <Link href="/trainers" className="mt-4 inline-flex rounded-full border border-gray-200 bg-white px-6 py-3 font-bold text-charcoal hover:border-orange/30">
+            Contact a Certified Trainer →
+          </Link>
           <button onClick={() => router.push("/library")} className="mt-4 block w-full text-sm font-bold text-muted">
             Browse all courses
           </button>

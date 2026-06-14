@@ -28,6 +28,9 @@ export default async function DashboardPage() {
             <Link href="/assessment" className="inline-flex rounded-full border border-gray-200 bg-white px-6 py-3 font-bold text-charcoal hover:border-orange/30">
               Take Assessment
             </Link>
+            <Link href="/trainers" className="inline-flex rounded-full border border-gray-200 bg-white px-6 py-3 font-bold text-charcoal hover:border-orange/30">
+              Contact Dog Trainer
+            </Link>
           </div>
         </div>
 

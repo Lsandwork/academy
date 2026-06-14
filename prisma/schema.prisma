@@ -45,6 +45,7 @@ model User {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   creditTransactions CreditTransaction[]
+  trainerContracts   TrainerContract[]
 
   @@schema("academy")
 }
@@ -116,5 +117,41 @@ model AiHealthCheck {
   metadata       String?
   createdAt      DateTime @default(now())
 
+  @@schema("academy")
+}
+
+model CertifiedTrainer {
+  id          String            @id @default(cuid())
+  slug        String            @unique
+  name        String
+  email       String
+  title       String
+  bio         String
+  specialties String            @default("[]")
+  photoUrl    String?
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  contracts   TrainerContract[]
+
+  @@schema("academy")
+}
+
+model TrainerContract {
+  id               String           @id @default(cuid())
+  ownerId          String
+  owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  trainerId        String
+  trainer          CertifiedTrainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  status           String           @default("pending")
+  ownerMessage     String?
+  assessmentReport String?
+  reportSummary    String?
+  trainerNotified  Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([ownerId])
+  @@index([trainerId])
   @@schema("academy")
 }

@@ -12,7 +12,18 @@ type AdminUser = SafeUser & {
 
 type ErrorRow = { id: string; severity: string; area: string; message: string; userEmail?: string | null; url?: string | null; device?: string | null; status: string; createdAt: string };
 
-const tabs = ["overview", "users", "access", "credits", "diagnostics", "logs"] as const;
+type TrainerContractRow = {
+  id: string;
+  status: string;
+  ownerMessage?: string | null;
+  reportSummary?: string | null;
+  trainerNotified: boolean;
+  createdAt: string;
+  owner: { name?: string | null; email: string };
+  trainer: { name: string; email: string; title: string };
+};
+
+const tabs = ["overview", "users", "access", "credits", "trainers", "diagnostics", "logs"] as const;
 
 function Badge({ status }: { status: DiagnosticStatus | string }) {
   const styles: Record<string, string> = {
@@ -35,6 +46,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   const [aiDiagnostics, setAiDiagnostics] = useState<any>(null);
   const [toolResult, setToolResult] = useState<string>("");
   const [errorLogs, setErrorLogs] = useState<ErrorRow[]>([]);
+  const [trainerContracts, setTrainerContracts] = useState<TrainerContractRow[]>([]);
   const [busy, setBusy] = useState(false);
 
   const selected = users.find((u) => u.id === selectedId);
@@ -66,6 +78,16 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
         .then((r) => r.json())
         .then((data) => {
           if (data.errors) setErrorLogs(data.errors);
+        });
+    }
+  }, [tab, isAdmin]);
+
+  useEffect(() => {
+    if (tab === "trainers" && isAdmin) {
+      fetch("/api/admin/trainer-contracts")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.contracts) setTrainerContracts(data.contracts);
         });
     }
   }, [tab, isAdmin]);
@@ -467,6 +489,51 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === "trainers" && isAdmin && (
+          <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-black">Trainer Contract Requests</h2>
+            <p className="mt-1 text-sm text-muted">Owner requests with assessment reports sent to certified trainers.</p>
+            {!trainerContracts.length ? (
+              <p className="mt-4 text-sm text-muted">No trainer requests yet.</p>
+            ) : (
+              <div className="mt-4 overflow-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Owner</th>
+                      <th className="py-2 pr-4">Trainer</th>
+                      <th className="py-2 pr-4">Report</th>
+                      <th className="py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trainerContracts.map((c) => (
+                      <tr key={c.id} className="border-b border-gray-50 align-top">
+                        <td className="py-3 pr-4 text-muted">{new Date(c.createdAt).toLocaleString()}</td>
+                        <td className="py-3 pr-4">
+                          <p className="font-bold">{c.owner.name || c.owner.email}</p>
+                          <p className="text-xs text-muted">{c.owner.email}</p>
+                          {c.ownerMessage && <p className="mt-1 text-xs text-charcoal">{c.ownerMessage}</p>}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <p className="font-bold">{c.trainer.name}</p>
+                          <p className="text-xs text-muted">{c.trainer.email}</p>
+                        </td>
+                        <td className="py-3 pr-4 text-xs text-muted">{c.reportSummary || "No report"}</td>
+                        <td className="py-3">
+                          <Badge status={c.status === "pending" ? "warning" : "healthy"} />
+                          {c.trainerNotified && <p className="mt-1 text-[10px] text-muted">Email sent</p>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

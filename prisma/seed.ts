@@ -37,7 +37,43 @@ async function main() {
     }
   });
 
+  const trainers = [
+    {
+      slug: "alex-morgan",
+      name: "Alex Morgan",
+      email: process.env.TRAINER_EMAIL_ALEX || "trainers@fitdog.com",
+      title: "CPDT-KA® Certified Trainer",
+      bio: "Alex specializes in puppy foundations, everyday obedience, and building calm home routines with LIMA-aligned methods.",
+      specialties: JSON.stringify(["Puppy training", "Obedience", "Calm home skills"])
+    },
+    {
+      slug: "jordan-lee",
+      name: "Jordan Lee",
+      email: process.env.TRAINER_EMAIL_JORDAN || "trainers@fitdog.com",
+      title: "CPDT-KA® Certified Trainer",
+      bio: "Jordan supports owners dealing with separation distress, leash reactivity, and high-energy enrichment plans.",
+      specialties: JSON.stringify(["Separation support", "Leash reactivity", "Enrichment"])
+    },
+    {
+      slug: "fitdog-training-team",
+      name: "Fitdog Training Team",
+      email: process.env.TRAINER_EMAIL_TEAM || "trainers@fitdog.com",
+      title: "Fitdog Certified Trainer Network",
+      bio: "Our certified trainer network matches owners with the right Fitdog professional for personalized hand-in-hand support.",
+      specialties: JSON.stringify(["Assessment follow-up", "Behavior plans", "Owner coaching"])
+    }
+  ];
+
+  for (const trainer of trainers) {
+    await prisma.certifiedTrainer.upsert({
+      where: { slug: trainer.slug },
+      update: trainer,
+      create: trainer
+    });
+  }
+
   console.log(`Seeded admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${supabaseId ? ` (linked supabaseId)` : ""}`);
+  console.log(`Seeded ${trainers.length} certified trainers`);
 }
 
 main()

@@ -10,6 +10,7 @@ export function AppHeader({ user }: { user: SafeUser }) {
         <nav className="hidden items-center gap-6 text-sm font-semibold md:flex">
           <Link href="/dashboard" className="hover:text-orange">Dashboard</Link>
           <Link href="/library" className="hover:text-orange">Library</Link>
+          <Link href="/trainers" className="hover:text-orange">Contact Dog Trainer</Link>
           <Link href="/pricing" className="hover:text-orange">Pricing</Link>
           <Link href="/profile" className="hover:text-orange">Profile</Link>
           {(user.role === "STAFF" || user.role === "ADMIN") && (
