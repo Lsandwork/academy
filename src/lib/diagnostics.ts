@@ -1,5 +1,6 @@
 import { academyLessons, academyTracks, pricingPlans } from "@/data/academyCourses";
 import { recommendTrackFromAnswers } from "@/data/assessment";
+import { isTrainerEmailConfigured } from "@/lib/trainerNotify";
 import { prisma } from "@/lib/db";
 import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
 import { stripe, stripePrices } from "@/lib/stripe";
@@ -197,10 +198,16 @@ export async function runDiagnostics() {
     {
       title: "Email + Notifications",
       items: [
-        { label: "Email provider", status: "not_configured", detail: "Not configured" },
+        {
+          label: "Trainer email (Resend)",
+          status: isTrainerEmailConfigured() ? "healthy" : "not_configured",
+          detail: isTrainerEmailConfigured()
+            ? "RESEND_API_KEY set — assessment reports can email trainers"
+            : "Set RESEND_API_KEY in Vercel to email trainers automatically"
+        },
         { label: "Welcome email", status: "not_configured", detail: "Not configured" },
-        { label: "Purchase confirmation", status: "not_configured", detail: "Not configured" },
-        { label: "Password reset", status: "not_configured", detail: "Not configured" }
+        { label: "Purchase confirmation", status: "not_configured", detail: "Handled by Stripe checkout" },
+        { label: "Password reset", status: "not_configured", detail: "Handled by Supabase Auth" }
       ]
     },
     {

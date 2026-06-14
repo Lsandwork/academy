@@ -2,17 +2,25 @@ import Link from "next/link";
 import { SafeUser } from "@/lib/user";
 import { Logo } from "./Logo";
 
+const navLinks = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/library", label: "Library" },
+  { href: "/trainers", label: "Contact Dog Trainer" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/profile", label: "Profile" }
+];
+
 export function AppHeader({ user }: { user: SafeUser }) {
   return (
     <header className="border-b border-gray-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Logo compact />
-        <nav className="hidden items-center gap-6 text-sm font-semibold md:flex">
-          <Link href="/dashboard" className="hover:text-orange">Dashboard</Link>
-          <Link href="/library" className="hover:text-orange">Library</Link>
-          <Link href="/trainers" className="hover:text-orange">Contact Dog Trainer</Link>
-          <Link href="/pricing" className="hover:text-orange">Pricing</Link>
-          <Link href="/profile" className="hover:text-orange">Profile</Link>
+        <nav className="hidden items-center gap-6 text-sm font-semibold lg:flex">
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-orange">
+              {link.label}
+            </Link>
+          ))}
           {(user.role === "STAFF" || user.role === "ADMIN") && (
             <Link href="/admin" className="hover:text-orange">Admin</Link>
           )}
@@ -34,6 +42,16 @@ export function AppHeader({ user }: { user: SafeUser }) {
           </form>
         </div>
       </div>
+      <nav className="mx-auto flex max-w-7xl gap-4 overflow-x-auto px-6 pb-3 text-xs font-semibold lg:hidden">
+        {navLinks.map((link) => (
+          <Link key={link.href} href={link.href} className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">
+            {link.label}
+          </Link>
+        ))}
+        {(user.role === "STAFF" || user.role === "ADMIN") && (
+          <Link href="/admin" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Admin</Link>
+        )}
+      </nav>
     </header>
   );
 }

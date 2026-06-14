@@ -1,11 +1,20 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { SafeUser, accessLabel } from "@/lib/user";
 
 type CreditTx = { id: string; amount: number; reason: string; createdAt: string; lessonId?: string | null };
+
+type TrainerContract = {
+  id: string;
+  status: string;
+  reportSummary?: string | null;
+  createdAt: string;
+  trainer: { name: string; title: string };
+};
 
 export default function ProfileClient({ user }: { user: SafeUser }) {
   const [profile, setProfile] = useState({ name: user.name || "", email: user.email });
@@ -14,12 +23,18 @@ export default function ProfileClient({ user }: { user: SafeUser }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [creditHistory, setCreditHistory] = useState<CreditTx[]>([]);
+  const [trainerContracts, setTrainerContracts] = useState<TrainerContract[]>([]);
 
   useEffect(() => {
     fetch("/api/credits/history")
       .then((r) => r.json())
       .then((data) => {
         if (data.transactions) setCreditHistory(data.transactions);
+      });
+    fetch("/api/trainers/contracts")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.contracts) setTrainerContracts(data.contracts);
       });
   }, []);
 
@@ -125,6 +140,30 @@ export default function ProfileClient({ user }: { user: SafeUser }) {
             </ul>
           </section>
         )}
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-black">Trainer Requests</h2>
+            <Link href="/trainers" className="text-sm font-bold text-orange hover:underline">
+              Contact a trainer
+            </Link>
+          </div>
+          {trainerContracts.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">No trainer requests yet. Your assessment report is sent automatically when you request a certified Fitdog trainer.</p>
+          ) : (
+            <ul className="mt-3 space-y-3">
+              {trainerContracts.map((c) => (
+                <li key={c.id} className="rounded-2xl border border-gray-100 p-4">
+                  <p className="font-bold">{c.trainer.name}</p>
+                  <p className="text-xs text-muted">{c.trainer.title}</p>
+                  <p className="mt-2 text-sm capitalize text-charcoal">Status: {c.status}</p>
+                  {c.reportSummary && <p className="mt-1 text-xs text-muted">{c.reportSummary}</p>}
+                  <p className="mt-1 text-xs text-muted">{new Date(c.createdAt).toLocaleString()}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         {message && <p className="rounded-xl bg-success/10 px-4 py-3 text-sm font-semibold text-success">{message}</p>}
         {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { academyLessons, academyTracks, pricingPlans } from "@/data/academyCourses";
 import { recommendTrackFromAnswers } from "@/data/assessment";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { runDiagnostics } from "@/lib/diagnostics";
 import { logError } from "@/lib/errors";
 import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
 import { hasLessonAccess } from "@/lib/user";
 import { stripe, stripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
+import { sendTrainerTestEmail } from "@/lib/trainerNotify";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,8 +53,15 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      case "test_email":
-        return NextResponse.json({ ok: false, action, message: "Email provider not configured." });
+      case "test_email": {
+        const admin = await getCurrentUser();
+        const to = process.env.TRAINER_TEST_EMAIL || admin?.email;
+        if (!to) {
+          return NextResponse.json({ ok: false, action, message: "No test email address available." });
+        }
+        const result = await sendTrainerTestEmail(to);
+        return NextResponse.json({ ok: result.ok, action, message: result.message });
+      }
 
       case "export_report": {
         const report = await runDiagnostics();
