@@ -11,6 +11,17 @@ export class LoginError extends Error {
   }
 }
 
+function friendlyAuthError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("email rate limit")) {
+    return "Too many attempts right now. Please wait a few minutes and try again.";
+  }
+  if (lower.includes("invalid login credentials")) {
+    return "Invalid email or password.";
+  }
+  return message;
+}
+
 async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -44,7 +55,7 @@ export async function signInWithEmail(
   );
 
   if (error) {
-    throw new LoginError(error.message);
+    throw new LoginError(friendlyAuthError(error.message));
   }
 
   if (!data.session) {
@@ -83,45 +94,30 @@ export async function signUpWithEmail(email: string, password: string, name?: st
     throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
   }
 
-  const supabase = createClient();
-  const normalizedEmail = email.trim().toLowerCase();
-
-  const { data, error } = await withTimeout(
-    supabase.auth.signUp({
-      email: normalizedEmail,
-      password,
-      options: { data: { name: name?.trim() || "" } }
+  const res = await withTimeout(
+    fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        password,
+        name: name?.trim() || null
+      })
     }),
     LOGIN_TIMEOUT_MS,
     "Sign up timed out. Please try again."
   );
 
-  if (error) {
-    throw new LoginError(error.message);
+  let data: { error?: string; redirect?: string; message?: string } = {};
+  try {
+    data = await res.json();
+  } catch {
+    throw new LoginError("Could not read the registration response from the server.");
   }
 
-  if (!data.user) {
-    throw new LoginError("Could not create your account.");
+  if (!res.ok) {
+    throw new LoginError(friendlyAuthError(data.error || "Registration failed."));
   }
 
-  if (!data.session) {
-    throw new LoginError("Check your email to confirm your account, then sign in.");
-  }
-
-  const setupRes = await withTimeout(
-    fetch("/api/auth/setup-profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name?.trim() || null })
-    }),
-    LOGIN_TIMEOUT_MS,
-    "Sign up timed out while creating your profile."
-  );
-
-  const setupData = await setupRes.json();
-  if (!setupRes.ok) {
-    throw new LoginError(setupData.error || "Could not set up your account profile.");
-  }
-
-  return setupData.redirect || "/dashboard";
+  return data.redirect || "/dashboard";
 }
