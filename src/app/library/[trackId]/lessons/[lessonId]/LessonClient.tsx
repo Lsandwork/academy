@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FitdogAiAssist } from "@/components/ai/FitdogAiAssist";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { AppHeader } from "@/components/AppHeader";
 import { LessonVideoPlayer } from "@/components/LessonVideoPlayer";
 import { AcademyLesson, AcademyTrack } from "@/data/academyCourses";
@@ -91,6 +92,13 @@ export default function LessonClient({
             {message && <p className="mt-4 text-sm font-semibold text-red-600">{message}</p>}
           </div>
         </main>
+        <FitdogAiChatWidget
+          pageUrl={`/library/${track.id}/lessons/${lesson.id}`}
+          lessonId={lesson.id}
+          lessonTitle={lesson.title}
+          trackTitle={track.title}
+          lessonUnlocked={false}
+        />
       </div>
     );
   }
@@ -173,6 +181,7 @@ export default function LessonClient({
             lessonTitle={lesson.title}
             trackTitle={track.title}
             pageUrl={`/library/${track.id}/lessons/${lesson.id}`}
+            lessonUnlocked
           />
         </div>
       </main>

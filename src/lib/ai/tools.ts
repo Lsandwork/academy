@@ -25,6 +25,15 @@ export async function runAiTool(
   switch (tool) {
     case "getCurrentLesson": {
       if (!ctx.lessonId) return { error: "No lesson in context." };
+      const lesson = getLesson(ctx.lessonId);
+      if (!lesson) return { error: "Lesson not found." };
+      if (!hasLessonAccess(ctx.user, ctx.lessonId, lesson.isFreePreview)) {
+        return {
+          error: "You do not have access to this lesson.",
+          title: lesson.title,
+          checkoutPath: `/pricing?lesson=${ctx.lessonId}&plan=single_lesson`
+        };
+      }
       const built = buildLessonContext(ctx.lessonId);
       if (!built) return { error: "Lesson not found." };
       return {
@@ -39,6 +48,11 @@ export async function runAiTool(
     case "summarizeLesson": {
       const lessonId = (args.lessonId as string) || ctx.lessonId;
       if (!lessonId) return { error: "lessonId required." };
+      const lesson = getLesson(lessonId);
+      if (!lesson) return { error: "Lesson not found." };
+      if (!hasLessonAccess(ctx.user, lessonId, lesson.isFreePreview)) {
+        return { error: "You do not have access to this lesson.", checkoutPath: `/pricing?lesson=${lessonId}&plan=single_lesson` };
+      }
       const result = await summarizeLesson(lessonId);
       return { summary: result.summary, cached: result.cached };
     }
@@ -141,8 +155,8 @@ export async function runAiTool(
       const lessonId = args.lessonId ? String(args.lessonId) : ctx.lessonId;
       return {
         success: true,
-        checkoutPath: "/pricing",
-        checkoutHint: "Use Secure Checkout on the pricing page.",
+        checkoutPath: lessonId ? `/pricing?lesson=${lessonId}&plan=single_lesson` : "/pricing?plan=monthly",
+        checkoutHint: "Tap Secure Checkout on the pricing page.",
         planId,
         lessonId: lessonId ?? null
       };

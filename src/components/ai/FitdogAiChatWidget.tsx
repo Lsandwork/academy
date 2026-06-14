@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { AiChatAction } from "@/lib/ai/access";
 import type { AiActionType } from "@/lib/ai/config";
 import { FitdogAiMessenger, useChatMessages } from "./FitdogAiMessenger";
 
@@ -14,12 +15,14 @@ export function FitdogAiChatWidget({
   pageUrl,
   lessonId,
   lessonTitle,
-  trackTitle
+  trackTitle,
+  lessonUnlocked = true
 }: {
   pageUrl: string;
   lessonId?: string;
   lessonTitle?: string;
   trackTitle?: string;
+  lessonUnlocked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -54,7 +57,7 @@ export function FitdogAiChatWidget({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not send message.");
 
-      append("assistant", data.reply);
+      append("assistant", data.reply, data.actions as AiChatAction[] | undefined);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       setError(msg);
@@ -76,14 +79,20 @@ export function FitdogAiChatWidget({
       onSend={() => sendMessage(input)}
       onQuickAction={(action) => sendMessage(action.prompt ?? action.label, action.actionType)}
       quickActions={
-        lessonId
+        lessonId && lessonUnlocked
           ? LESSON_QUICK.map((a) => ({
               ...a,
               prompt: a.prompt ?? a.label
             }))
           : undefined
       }
-      placeholder={lessonId ? "Ask about this lesson…" : "Ask a training question…"}
+      placeholder={
+        lessonId
+          ? lessonUnlocked
+            ? "Ask about this lesson…"
+            : "Ask what this lesson covers…"
+          : "Ask a training question…"
+      }
     />
   );
 }

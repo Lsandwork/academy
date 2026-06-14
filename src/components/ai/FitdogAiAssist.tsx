@@ -17,12 +17,14 @@ export function FitdogAiAssist({
   lessonId,
   lessonTitle,
   trackTitle,
-  pageUrl
+  pageUrl,
+  lessonUnlocked = true
 }: {
   lessonId: string;
   lessonTitle: string;
   trackTitle: string;
   pageUrl: string;
+  lessonUnlocked?: boolean;
 }) {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(LOADING_MESSAGES[0]);
@@ -94,6 +96,7 @@ export function FitdogAiAssist({
         lessonId={lessonId}
         lessonTitle={lessonTitle}
         trackTitle={trackTitle}
+        lessonUnlocked={lessonUnlocked}
       />
     </>
   );

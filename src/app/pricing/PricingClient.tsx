@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 import { AppHeader } from "@/components/AppHeader";
 import { pricingPlans } from "@/data/academyCourses";
@@ -18,9 +18,17 @@ export default function PricingClient({ user }: { user: SafeUser | null }) {
   const router = useRouter();
   const params = useSearchParams();
   const lessonId = params.get("lesson") || undefined;
-  const [selected, setSelected] = useState(pricingPlans[1]);
+  const planParam = params.get("plan");
+  const initialPlan = pricingPlans.find((p) => p.id === planParam) ?? (lessonId ? pricingPlans[0] : pricingPlans[1]);
+  const [selected, setSelected] = useState(initialPlan);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const plan = pricingPlans.find((p) => p.id === planParam);
+    if (plan) setSelected(plan);
+    else if (lessonId) setSelected(pricingPlans[0]);
+  }, [planParam, lessonId]);
 
   async function checkout() {
     if (!user) {

@@ -2,18 +2,42 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 import type { AiActionType } from "@/lib/ai/config";
+import type { AiChatAction } from "@/lib/ai/access";
 
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
   at: number;
+  actions?: AiChatAction[];
 };
 
 function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function ChatActions({ actions }: { actions: AiChatAction[] }) {
+  if (!actions.length) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {actions.map((action) => (
+        <Link
+          key={action.href}
+          href={action.href}
+          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ${
+            action.variant === "primary"
+              ? "bg-orange text-white hover:bg-orange-dark"
+              : "border border-gray-200 bg-white text-charcoal hover:border-orange/40"
+          }`}
+        >
+          {action.label}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 function formatTime(ts: number) {
@@ -160,6 +184,7 @@ export function FitdogAiMessenger({
                     <p className={`mt-1 text-[10px] text-muted ${msg.role === "user" ? "text-right" : "text-left"}`}>
                       {formatTime(msg.at)}
                     </p>
+                    {msg.role === "assistant" && msg.actions?.length ? <ChatActions actions={msg.actions} /> : null}
                   </div>
                 </div>
               ))}
@@ -209,8 +234,8 @@ export function useChatMessages(initialAssistant?: string) {
       : []
   );
 
-  function append(role: "user" | "assistant", content: string) {
-    setMessages((prev) => [...prev, { id: newId(), role, content, at: Date.now() }]);
+  function append(role: "user" | "assistant", content: string, actions?: AiChatAction[]) {
+    setMessages((prev) => [...prev, { id: newId(), role, content, at: Date.now(), actions }]);
   }
 
   return { messages, append, setMessages };

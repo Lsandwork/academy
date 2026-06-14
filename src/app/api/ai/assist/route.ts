@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { buildLessonContext } from "@/lib/ai/context";
+import {
+  buildLockedLessonContext,
+  enrichReplyWithCheckoutActions,
+  isContentRevealingAction,
+  paywallReply
+} from "@/lib/ai/access";
 import { getAiConfig, type AiActionType } from "@/lib/ai/config";
 import { AiUnavailableError, callGemini } from "@/lib/ai/gemini";
 import { logAiRequest } from "@/lib/ai/logging";
+import { AI_LESSON_TAIL, buildAiUserPrompt } from "@/lib/ai/prompts";
 import { checkRateLimit } from "@/lib/ai/rateLimit";
 
 const ACTION_PROMPTS: Record<string, string> = {
@@ -43,9 +49,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "lessonId is required." }, { status: 400 });
   }
 
-  const ctx = buildLessonContext(lessonId);
-  if (!ctx) {
+  const lessonCtx = buildLockedLessonContext(user, lessonId);
+  if (!lessonCtx) {
     return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+  }
+
+  if (!lessonCtx.unlocked && isContentRevealingAction(actionType)) {
+    const paywall = paywallReply(lessonCtx.lesson.title, lessonId, user);
+    return NextResponse.json({
+      reply: paywall.reply,
+      actions: paywall.actions,
+      actionType,
+      locked: true
+    });
   }
 
   const instruction = ACTION_PROMPTS[actionType] ?? "Answer the owner's question using the lesson context.";
@@ -53,19 +69,25 @@ export async function POST(req: NextRequest) {
     ? `\n\nRecent conversation:\n${history.map((h: { role: string; content: string }) => `${h.role}: ${h.content}`).join("\n")}`
     : "";
 
-  const userPrompt = [
-    `Lesson context:\n${ctx.contextText}`,
-    `\nAction: ${actionType}`,
-    `\nInstruction: ${instruction}`,
-    message ? `\nOwner question: ${message}` : "",
-    historyText,
-    "\nRespond as Fitdog AI Assist. Be warm, professional, and practical. Do not mention AI providers."
-  ].join("");
+  const userPrompt = buildAiUserPrompt(
+    [
+      `Lesson context:\n${lessonCtx.contextText}`,
+      `\nAction: ${actionType}`,
+      `\nInstruction: ${instruction}`,
+      message ? `\nOwner question: ${message}` : "",
+      historyText,
+      AI_LESSON_TAIL
+    ],
+    user
+  );
 
   const started = Date.now();
 
   try {
     const result = await callGemini({ userPrompt });
+    const actions = enrichReplyWithCheckoutActions(result.text, user, lessonId);
+    const uniqueActions = actions.filter((a, i, arr) => arr.findIndex((b) => b.href === a.href) === i);
+
     await logAiRequest({
       userId: user.id,
       lessonId,
@@ -79,7 +101,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       reply: result.text,
+      actions: uniqueActions.length ? uniqueActions : undefined,
       actionType,
+      locked: !lessonCtx.unlocked,
       responseTimeMs: result.responseTimeMs
     });
   } catch (error) {
