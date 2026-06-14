@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findProfileForAuthUser, redirectForRole } from "@/lib/auth";
+import { ensureProfileForAuthUser, redirectForRole } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,28 +16,16 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const email = user.email.toLowerCase().trim();
     const name = typeof body.name === "string" ? body.name.trim() || null : user.user_metadata?.name || null;
 
-    let profile = await findProfileForAuthUser(user);
+    let profile = await ensureProfileForAuthUser(user);
 
-    if (profile) {
-      if (!profile.supabaseId) {
-        profile = await prisma.user.update({
-          where: { id: profile.id },
-          data: { supabaseId: user.id }
-        });
-      }
-      return NextResponse.json({ ok: true, redirect: redirectForRole(profile.role) });
+    if (name && !profile.name) {
+      profile = await prisma.user.update({
+        where: { id: profile.id },
+        data: { name }
+      });
     }
-
-    profile = await prisma.user.create({
-      data: {
-        supabaseId: user.id,
-        email,
-        name
-      }
-    });
 
     return NextResponse.json({ ok: true, redirect: redirectForRole(profile.role) });
   } catch (err) {

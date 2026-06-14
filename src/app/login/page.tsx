@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { LoginError, signInWithEmail } from "@/lib/auth/client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
@@ -11,6 +11,12 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "auth_callback") {
+      setError("Sign-in link expired or invalid. Please try again.");
+    }
+  }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,7 +57,14 @@ export default function LoginPage() {
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <input name="email" type="email" required placeholder="Email" className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-orange" />
-          <input name="password" type="password" required placeholder="Password" className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-orange" />
+          <div>
+            <input name="password" type="password" required placeholder="Password" className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-orange" />
+            <div className="mt-2 text-right">
+              <Link href="/forgot-password" className="text-sm font-semibold text-orange hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
           {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
           <button disabled={busy} type="submit" className="w-full rounded-full bg-orange py-3 font-bold text-white hover:bg-orange-dark disabled:opacity-60">
             {busy ? "Signing in..." : "Sign In"}

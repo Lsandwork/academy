@@ -21,22 +21,52 @@ export async function findProfileForAuthUser(authUser: { id: string; email?: str
   });
 }
 
+export async function ensureProfileForAuthUser(authUser: {
+  id: string;
+  email?: string;
+  user_metadata?: { name?: string };
+}) {
+  const email = authUser.email?.toLowerCase().trim();
+  if (!email) {
+    throw new Error("Authenticated user is missing an email address.");
+  }
+
+  let profile = await findProfileForAuthUser(authUser);
+
+  if (profile) {
+    if (!profile.supabaseId) {
+      profile = await prisma.user.update({
+        where: { id: profile.id },
+        data: { supabaseId: authUser.id }
+      });
+    }
+    return profile;
+  }
+
+  const name =
+    typeof authUser.user_metadata?.name === "string" ? authUser.user_metadata.name.trim() || null : null;
+
+  try {
+    return await prisma.user.create({
+      data: {
+        supabaseId: authUser.id,
+        email,
+        name
+      }
+    });
+  } catch {
+    profile = await findProfileForAuthUser(authUser);
+    if (profile) return profile;
+    throw new Error("Could not create your account profile.");
+  }
+}
+
 export async function getCurrentUser(): Promise<SafeUser | null> {
   try {
     const authUser = await getSupabaseAuthUser();
     if (!authUser) return null;
 
-    const profile = await findProfileForAuthUser(authUser);
-    if (!profile) return null;
-
-    if (!profile.supabaseId) {
-      const linked = await prisma.user.update({
-        where: { id: profile.id },
-        data: { supabaseId: authUser.id }
-      });
-      return toSafeUser(linked);
-    }
-
+    const profile = await ensureProfileForAuthUser(authUser);
     return toSafeUser(profile);
   } catch {
     return null;

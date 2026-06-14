@@ -80,12 +80,64 @@ export async function signInWithEmail(
   }
 
   if (!syncRes.ok) {
-    if (syncData.code === "NO_PROFILE") {
-      throw new LoginError("Login worked, but your account profile is not set up yet.");
-    }
     throw new LoginError(syncData.error || "Could not load your account profile.");
   }
 
+  return syncData.redirect || "/dashboard";
+}
+
+function appOrigin() {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
+export async function requestPasswordReset(email: string) {
+  if (!isSupabaseConfigured()) {
+    throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
+  }
+
+  const supabase = createClient();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const { error } = await withTimeout(
+    supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: `${appOrigin()}/auth/callback?next=/reset-password`
+    }),
+    LOGIN_TIMEOUT_MS,
+    "Password reset timed out. Please try again."
+  );
+
+  if (error) {
+    throw new LoginError(friendlyAuthError(error.message));
+  }
+}
+
+export async function updatePassword(password: string) {
+  if (!isSupabaseConfigured()) {
+    throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
+  }
+
+  if (password.length < 8) {
+    throw new LoginError("Password must be at least 8 characters.");
+  }
+
+  const supabase = createClient();
+  const { error } = await withTimeout(
+    supabase.auth.updateUser({ password }),
+    LOGIN_TIMEOUT_MS,
+    "Could not update password. Please try again."
+  );
+
+  if (error) {
+    throw new LoginError(friendlyAuthError(error.message));
+  }
+
+  const syncRes = await fetch("/api/auth/sync", { method: "POST" });
+  if (!syncRes.ok) {
+    return "/dashboard";
+  }
+
+  const syncData = await syncRes.json();
   return syncData.redirect || "/dashboard";
 }
 
