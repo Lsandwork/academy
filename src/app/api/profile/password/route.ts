@@ -1,7 +1,6 @@
-import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, verifyPassword } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -16,15 +15,20 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "New password must be at least 8 characters." }, { status: 400 });
     }
 
-    const valid = await verifyPassword(user.email, currentPassword);
-    if (!valid || valid.id !== user.id) {
+    const supabase = await createClient();
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword
+    });
+
+    if (verifyError) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 401 });
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: await bcrypt.hash(newPassword, 12) }
-    });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

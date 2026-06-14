@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Logo } from "@/components/Logo";
+import { LoginError, signInWithEmail } from "@/lib/auth/client";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -14,28 +16,31 @@ export default function StaffLoginPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const form = new FormData(e.currentTarget);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.get("email"),
-        password: form.get("password"),
-        staffOnly: true
-      })
-    });
+    try {
+      if (!isSupabaseConfigured()) {
+        throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
+      }
 
-    const data = await res.json();
-    setBusy(false);
-
-    if (!res.ok) {
-      setError(data.error || "Login failed.");
-      return;
+      const form = new FormData(e.currentTarget);
+      const redirect = await signInWithEmail(
+        String(form.get("email") || ""),
+        String(form.get("password") || ""),
+        { staffOnly: true }
+      );
+      router.push(redirect);
+      router.refresh();
+    } catch (err) {
+      if (err instanceof LoginError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setBusy(false);
     }
-
-    router.push(data.redirect || "/admin");
-    router.refresh();
   }
 
   return (

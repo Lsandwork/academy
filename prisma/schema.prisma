@@ -22,8 +22,9 @@ enum AccessLevel {
 
 model User {
   id                 String              @id @default(cuid())
+  supabaseId         String?             @unique
   email              String              @unique
-  passwordHash       String
+  passwordHash       String?
   name               String?
   avatarUrl          String?
   role               Role                @default(USER)

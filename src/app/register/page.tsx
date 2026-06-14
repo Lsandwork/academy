@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Logo } from "@/components/Logo";
+import { LoginError, signUpWithEmail } from "@/lib/auth/client";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,28 +16,31 @@ export default function RegisterPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const form = new FormData(e.currentTarget);
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.get("name"),
-        email: form.get("email"),
-        password: form.get("password")
-      })
-    });
+    try {
+      if (!isSupabaseConfigured()) {
+        throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
+      }
 
-    const data = await res.json();
-    setBusy(false);
-
-    if (!res.ok) {
-      setError(data.error || "Registration failed.");
-      return;
+      const form = new FormData(e.currentTarget);
+      const redirect = await signUpWithEmail(
+        String(form.get("email") || ""),
+        String(form.get("password") || ""),
+        String(form.get("name") || "")
+      );
+      router.push(redirect);
+      router.refresh();
+    } catch (err) {
+      if (err instanceof LoginError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setBusy(false);
     }
-
-    router.push(data.redirect || "/dashboard");
-    router.refresh();
   }
 
   return (

@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       case "check_locked_content": {
         const freeUser = {
           id: "test",
+          supabaseId: null,
           email: "test@test.com",
           role: "USER" as const,
           accessLevel: "FREE" as const,

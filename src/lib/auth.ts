@@ -1,18 +1,46 @@
-import bcrypt from "bcryptjs";
-import { User } from "@prisma/client";
-import { prisma } from "./db";
-import { getSession } from "./session";
+import { prisma } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
 import { SafeUser, toSafeUser } from "./user";
 
 export type { SafeUser } from "./user";
 export { accessLabel, hasLessonAccess, parseJsonArray, toSafeUser } from "./user";
 
-export async function getCurrentUser(): Promise<SafeUser | null> {
-  const session = await getSession();
-  if (!session.userId) return null;
+export async function getSupabaseAuthUser() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user?.email) return null;
+  return data.user;
+}
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
-  return user ? toSafeUser(user) : null;
+export async function findProfileForAuthUser(authUser: { id: string; email?: string }) {
+  const email = authUser.email?.toLowerCase().trim();
+  return prisma.user.findFirst({
+    where: {
+      OR: [{ supabaseId: authUser.id }, ...(email ? [{ email }] : [])]
+    }
+  });
+}
+
+export async function getCurrentUser(): Promise<SafeUser | null> {
+  try {
+    const authUser = await getSupabaseAuthUser();
+    if (!authUser) return null;
+
+    const profile = await findProfileForAuthUser(authUser);
+    if (!profile) return null;
+
+    if (!profile.supabaseId) {
+      const linked = await prisma.user.update({
+        where: { id: profile.id },
+        data: { supabaseId: authUser.id }
+      });
+      return toSafeUser(linked);
+    }
+
+    return toSafeUser(profile);
+  } catch {
+    return null;
+  }
 }
 
 export async function requireUser() {
@@ -33,22 +61,11 @@ export async function requireAdmin() {
   return user;
 }
 
-export async function verifyPassword(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
-  if (!user) return null;
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  return valid ? user : null;
+export async function signOutCurrentUser() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
 }
 
-export async function createSession(user: User) {
-  const session = await getSession();
-  session.userId = user.id;
-  session.email = user.email;
-  session.role = user.role;
-  await session.save();
-}
-
-export async function destroySession() {
-  const session = await getSession();
-  session.destroy();
+export function redirectForRole(role: SafeUser["role"]) {
+  return role === "ADMIN" || role === "STAFF" ? "/admin" : "/dashboard";
 }

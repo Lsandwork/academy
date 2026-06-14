@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.1",
     "bcryptjs": "^3.0.2",
     "iron-session": "^8.0.4",
     "next": "^15.2.4",
