@@ -1,27 +1,43 @@
 import { PrismaClient, Role } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
 const prisma = new PrismaClient();
 
+const ADMIN_EMAIL = "lsand.work@gmail.com";
+const ADMIN_PASSWORD = "password123";
+const ADMIN_NAME = "Admin User";
+
 async function main() {
-  const passwordHash = await bcrypt.hash("password123", 12);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  let supabaseId: string | null = null;
+  if (url && serviceKey) {
+    const supabase = createClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    const { data, error } = await supabase.auth.admin.listUsers();
+    if (!error) {
+      supabaseId = data.users.find((u) => u.email?.toLowerCase() === ADMIN_EMAIL)?.id ?? null;
+    }
+  }
 
   await prisma.user.upsert({
-    where: { email: "lsand.work@gmail.com" },
+    where: { email: ADMIN_EMAIL },
     update: {
-      passwordHash,
       role: Role.ADMIN,
-      name: "Admin User"
+      name: ADMIN_NAME,
+      ...(supabaseId ? { supabaseId } : {})
     },
     create: {
-      email: "lsand.work@gmail.com",
-      passwordHash,
+      email: ADMIN_EMAIL,
       role: Role.ADMIN,
-      name: "Admin User"
+      name: ADMIN_NAME,
+      supabaseId
     }
   });
 
-  console.log("Seeded admin: lsand.work@gmail.com / password123");
+  console.log(`Seeded admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${supabaseId ? ` (linked supabaseId)` : ""}`);
 }
 
 main()
