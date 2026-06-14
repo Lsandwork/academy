@@ -405,7 +405,9 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                       <p className="mt-2 text-sm text-muted">Model: {aiDiagnostics.gemini?.model}</p>
                       <p className="text-sm text-muted">API key present: {aiDiagnostics.gemini?.apiKeyPresent ? "Yes" : "No"}</p>
                       <p className="text-sm text-muted">Avg response: {aiDiagnostics.gemini?.averageResponseTimeMs ?? "—"} ms</p>
-                      {aiDiagnostics.gemini?.lastErrorMessage && <p className="text-sm text-red-600">{aiDiagnostics.gemini.lastErrorMessage}</p>}
+                      {aiDiagnostics.gemini?.lastErrorMessage && aiDiagnostics.gemini?.status !== "connected" && (
+                        <p className="text-sm text-red-600">{aiDiagnostics.gemini.lastErrorMessage}</p>
+                      )}
                     </div>
                     <div className="rounded-2xl border border-gray-100 p-4">
                       <p className="font-bold">Lesson Context Sync</p>

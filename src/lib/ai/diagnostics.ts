@@ -20,12 +20,18 @@ export async function getAiAssistDiagnostics() {
     take: 10
   });
 
-  for (const check of recentHealth) {
+  const latest = recentHealth[0];
+  if (latest?.status === "healthy") {
+    lastSuccess = latest.createdAt;
+    lastError = null;
+  } else if (latest) {
+    lastFailure = latest.createdAt;
+    lastError = latest.errorMessage;
+  }
+
+  for (const check of recentHealth.slice(1)) {
     if (check.status === "healthy" && !lastSuccess) lastSuccess = check.createdAt;
-    if (check.status !== "healthy" && !lastFailure) {
-      lastFailure = check.createdAt;
-      lastError = check.errorMessage;
-    }
+    if (check.status !== "healthy" && !lastFailure) lastFailure = check.createdAt;
   }
 
   const successTimes = recentHealth.filter((c) => c.status === "healthy" && c.responseTimeMs).map((c) => c.responseTimeMs!);
