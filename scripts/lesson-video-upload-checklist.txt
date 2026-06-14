@@ -1,0 +1,46 @@
+Fitdog Academy — lesson video upload checklist (35 files)
+============================================================
+
+WHEN YOU ARE READY:
+1. Upload each MP4 to your CDN or Supabase Storage public bucket.
+2. Name files exactly as below (must match lesson id).
+3. Set Vercel env: FITDOG_VIDEO_CDN=https://your-bucket-url/lessons
+   (no trailing slash — app appends /{lesson-id}.mp4)
+4. Redeploy academy on Vercel.
+5. Admin → Diagnostics → Test Video Playback (expect 35/35).
+
+bringing-your-puppy-home.mp4
+potty-training-without-the-guesswork.mp4
+puppy-biting-and-teething.mp4
+crate-and-pen-comfort.mp4
+puppy-socialization-the-right-way.mp4
+puppy-alone-time-foundations.mp4
+how-dogs-learn.mp4
+marker-training.mp4
+name-recognition-and-focus.mp4
+sit-down-and-stand.mp4
+stay-and-release.mp4
+recall.mp4
+loose-leash-walking.mp4
+leave-it-and-drop-it.mp4
+place-training.mp4
+building-an-off-switch.mp4
+polite-greetings.mp4
+barking-basics.mp4
+grooming-and-handling-prep.mp4
+vet-visit-confidence.mp4
+separation-anxiety-vs-normal-adjustment.mp4
+alone-time-assessment.mp4
+management-before-training.mp4
+departure-cue-desensitization.mp4
+building-alone-time-duration.mp4
+understanding-reactivity.mp4
+safety-and-walk-management.mp4
+thresholds.mp4
+look-at-that.mp4
+emergency-walk-skills.mp4
+better-leash-handling.mp4
+rebuilding-real-world-confidence.mp4
+enrichment-101.mp4
+fitness-and-body-awareness.mp4
+better-walks-through-sniffing.mp4

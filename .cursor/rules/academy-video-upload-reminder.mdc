@@ -1,0 +1,16 @@
+---
+description: Remind user to upload Fitdog Academy lesson MP4s when working on video/CDN/lesson media
+alwaysApply: true
+---
+
+# Pending — Fitdog Academy lesson videos
+
+The user plans to upload hosted lesson videos later. Until then, lessons use track preview YouTube embeds.
+
+**When discussing videos, CDN, lesson playback, or FITDOG_VIDEO_CDN, remind the user:**
+
+1. Upload 35 MP4s named `{lesson-id}.mp4` (see `scripts/lesson-video-upload-checklist.txt`)
+2. Set `FITDOG_VIDEO_CDN` on Vercel to the public bucket base URL
+3. Redeploy and run Admin → Diagnostics → Test Video Playback
+
+Do not remove preview fallbacks until hosted videos are confirmed working.

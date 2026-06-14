@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "provision": "node scripts/provision-production.mjs",
+    "videos:checklist": "cat scripts/lesson-video-upload-checklist.txt",
     "postinstall": "prisma generate"
   },
   "dependencies": {
