@@ -1,7 +1,7 @@
 import { academyLessons, academyTracks, pricingPlans } from "@/data/academyCourses";
 import { recommendTrackFromAnswers } from "@/data/assessment";
 import { prisma } from "@/lib/db";
-import { getLessonVideoUrl } from "@/lib/lessonMedia";
+import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
 import { stripe, stripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 
@@ -79,7 +79,7 @@ export async function runDiagnostics() {
 
   const freePreviews = academyLessons.filter((l) => l.isFreePreview).length;
   const videosConnected = academyLessons.filter((l) => getLessonVideoUrl(l)).length;
-  const videoCdnConfigured = Boolean(process.env.FITDOG_VIDEO_CDN);
+  const videoCdnConfigured = isVideoCdnConfigured();
 
   const pricingItems: DiagnosticItem[] = pricingPlans.map((plan) => ({
     label: plan.title,
@@ -110,7 +110,21 @@ export async function runDiagnostics() {
         { label: "App Version", status: "healthy", detail: "1.0.0" },
         { label: "Database", status: dbStatus, detail: dbStatus === "healthy" ? "Connected" : "Error" },
         { label: "Payments", status: stripeConfigured ? "healthy" : "not_configured", detail: stripeConfigured ? "Stripe configured" : "Not configured" },
-        { label: "Video Hosting", status: videoCdnConfigured ? (videosConnected === academyLessons.length ? "healthy" : "warning") : "not_configured", detail: videoCdnConfigured ? `${videosConnected}/${academyLessons.length} lessons have video URLs` : "Set FITDOG_VIDEO_CDN to enable hosted videos" },
+        {
+          label: "Video Hosting",
+          status: videoCdnConfigured
+            ? videosConnected === academyLessons.length
+              ? "healthy"
+              : "warning"
+            : videosConnected
+              ? "warning"
+              : "not_configured",
+          detail: videoCdnConfigured
+            ? `${videosConnected}/${academyLessons.length} lessons have video URLs`
+            : videosConnected
+              ? `${videosConnected}/${academyLessons.length} lessons using preview embeds — set FITDOG_VIDEO_CDN for hosted MP4s`
+              : "Set FITDOG_VIDEO_CDN to enable hosted videos"
+        },
         { label: "Email", status: "not_configured", detail: "Email provider not configured." }
       ]
     },

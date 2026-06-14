@@ -4,7 +4,7 @@ import { recommendTrackFromAnswers } from "@/data/assessment";
 import { requireAdmin } from "@/lib/auth";
 import { runDiagnostics } from "@/lib/diagnostics";
 import { logError } from "@/lib/errors";
-import { getLessonVideoUrl } from "@/lib/lessonMedia";
+import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
 import { hasLessonAccess } from "@/lib/user";
 import { stripe, stripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
@@ -26,10 +26,15 @@ export async function POST(req: NextRequest) {
           return { lesson: lesson.title, status: url ? "ok" : "missing", url: url ?? null };
         });
         const connected = results.filter((r) => r.status === "ok").length;
+        const cdn = isVideoCdnConfigured();
         return NextResponse.json({
           ok: connected > 0,
           action,
-          message: connected ? `${connected}/${academyLessons.length} videos configured` : "Video hosting not configured. Set FITDOG_VIDEO_CDN.",
+          message: connected
+            ? cdn
+              ? `${connected}/${academyLessons.length} videos configured`
+              : `${connected}/${academyLessons.length} lessons using preview embeds (FITDOG_VIDEO_CDN not set)`
+            : "No lesson videos available.",
           results: results.slice(0, 15)
         });
       }

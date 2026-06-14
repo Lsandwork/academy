@@ -8,19 +8,23 @@ import { AppHeader } from "@/components/AppHeader";
 import { LessonVideoPlayer } from "@/components/LessonVideoPlayer";
 import { AcademyLesson, AcademyTrack } from "@/data/academyCourses";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
-import { getLessonThumbnail, getLessonVideoUrl } from "@/lib/lessonMedia";
+import { getLessonThumbnail } from "@/lib/lessonMedia";
 import { SafeUser, parseJsonArray } from "@/lib/user";
 
 export default function LessonClient({
   track,
   lesson,
   user,
-  unlocked
+  unlocked,
+  videoUrl,
+  videoIsPreview
 }: {
   track: AcademyTrack;
   lesson: AcademyLesson;
   user: SafeUser;
   unlocked: boolean;
+  videoUrl?: string;
+  videoIsPreview?: boolean;
 }) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(user);
@@ -29,7 +33,6 @@ export default function LessonClient({
 
   const completed = parseJsonArray(currentUser.completedLessonIds).includes(lesson.id);
   const favorited = parseJsonArray(currentUser.favoriteLessonIds).includes(lesson.id);
-  const videoUrl = getLessonVideoUrl(lesson);
   const thumbnail = getLessonThumbnail(lesson);
 
   async function postProgress(action: "complete" | "favorite" | "open") {
@@ -105,14 +108,21 @@ export default function LessonClient({
 
           <div className="mt-6 rounded-2xl bg-charcoal/5 p-6">
             {videoUrl ? (
-              <LessonVideoPlayer videoUrl={videoUrl} title={lesson.title} />
+              <>
+                <LessonVideoPlayer videoUrl={videoUrl} title={lesson.title} />
+                {videoIsPreview && (
+                  <p className="mt-3 text-xs text-muted">
+                    Preview video for this track. Upload lesson videos to your CDN and set FITDOG_VIDEO_CDN for full hosted playback.
+                  </p>
+                )}
+              </>
             ) : (
               <div className="flex items-center gap-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={thumbnail} alt="" className="h-20 w-32 rounded-xl object-cover" />
                 <div className="flex items-center gap-3">
                   <img src={fitdogAcademyAssets.icons.ui.play} alt="" width={28} height={28} />
-                  <p className="text-muted">Video hosting not configured for this lesson yet. Set FITDOG_VIDEO_CDN to enable hosted videos.</p>
+                  <p className="text-muted">Lesson video is not available yet.</p>
                 </div>
               </div>
             )}

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getLesson, getTrack } from "@/data/academyCourses";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getLessonVideoMeta } from "@/lib/lessonMedia";
 import { hasLessonAccess } from "@/lib/user";
 import LessonClient from "./LessonClient";
 
@@ -19,6 +20,7 @@ export default async function LessonPage({
   if (!track || !lesson || lesson.trackId !== track.id) notFound();
 
   const unlocked = hasLessonAccess(user, lessonId, lesson.isFreePreview);
+  const { videoUrl, isPreview } = getLessonVideoMeta(lesson);
 
   if (unlocked) {
     await prisma.user.update({
@@ -33,6 +35,8 @@ export default async function LessonPage({
       lesson={lesson}
       user={unlocked ? { ...user, lastOpenedLessonId: lessonId } : user}
       unlocked={unlocked}
+      videoUrl={videoUrl}
+      videoIsPreview={isPreview}
     />
   );
 }
