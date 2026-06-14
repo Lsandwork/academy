@@ -40,7 +40,7 @@ export function getAiConfig() {
   return {
     enabled: process.env.AI_ASSIST_ENABLED !== "false",
     apiKeyPresent: Boolean(process.env.GEMINI_API_KEY),
-    model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
     summaryCacheEnabled: process.env.AI_SUMMARY_CACHE_ENABLED !== "false",
     loggingEnabled: process.env.AI_ASSIST_LOGGING_ENABLED !== "false",
     adminDiagnosticsEnabled: process.env.AI_ASSIST_ADMIN_DIAGNOSTICS_ENABLED !== "false"
