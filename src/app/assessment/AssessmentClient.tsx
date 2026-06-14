@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { assessmentQuestions } from "@/data/assessment";
 import { SafeUser } from "@/lib/user";
 
@@ -88,6 +89,7 @@ export default function AssessmentClient({ user }: { user: SafeUser }) {
           {busy ? "Saving..." : "Get My Recommendation"}
         </button>
       </main>
+      <FitdogAiChatWidget pageUrl="/assessment" />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { TrackIcon } from "@/components/TrackIcon";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { academyTracks, lessonsForTrack } from "@/data/academyCourses";
 import { getTrackAssets } from "@/assets/fitdogAcademyAssets";
 import { SafeUser, parseJsonArray, trackProgress } from "@/lib/user";
@@ -81,6 +82,7 @@ export default function LibraryClient({ user }: { user: SafeUser }) {
           })}
         </div>
       </main>
+      <FitdogAiChatWidget pageUrl="/library" />
     </div>
   );
 }

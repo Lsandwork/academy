@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { TrackIcon } from "@/components/TrackIcon";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { academyTracks } from "@/data/academyCourses";
 import { getCurrentUser } from "@/lib/auth";
 import { accessLabel, parseJsonArray } from "@/lib/user";
@@ -60,6 +61,7 @@ export default async function DashboardPage() {
           ))}
         </div>
       </main>
+      <FitdogAiChatWidget pageUrl="/dashboard" />
     </div>
   );
 }

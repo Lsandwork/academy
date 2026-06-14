@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { SafeUser, accessLabel } from "@/lib/user";
 
 type CreditTx = { id: string; amount: number; reason: string; createdAt: string; lessonId?: string | null };
@@ -166,6 +167,7 @@ export default function ProfileClient({ user }: { user: SafeUser }) {
           <button type="submit" className="rounded-full bg-charcoal px-5 py-2 text-sm font-bold text-white">Update Password</button>
         </form>
       </main>
+      <FitdogAiChatWidget pageUrl="/profile" />
     </div>
   );
 }

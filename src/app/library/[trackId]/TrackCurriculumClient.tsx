@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { TrackIcon } from "@/components/TrackIcon";
+import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { AcademyTrack, getLesson, lessonsForTrack } from "@/data/academyCourses";
 import { getTrackAssets } from "@/assets/fitdogAcademyAssets";
 import { SafeUser, hasLessonAccess, parseJsonArray, trackProgress } from "@/lib/user";
@@ -126,6 +127,7 @@ export default function TrackCurriculumClient({ track, user }: { track: AcademyT
           </div>
         </div>
       </main>
+      <FitdogAiChatWidget pageUrl={`/library/${track.id}`} />
     </div>
   );
 }

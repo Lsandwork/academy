@@ -43,7 +43,14 @@ export function buildLessonContext(lessonId: string) {
 
 export function searchLessonsLocal(query: string, limit = 8) {
   const q = query.toLowerCase().trim();
-  if (!q) return academyLessons.slice(0, limit);
+  const toResult = (lesson: (typeof academyLessons)[number]) => ({
+    id: lesson.id,
+    title: lesson.title,
+    trackId: lesson.trackId,
+    trackTitle: getTrack(lesson.trackId)?.title ?? ""
+  });
+
+  if (!q) return academyLessons.slice(0, limit).map(toResult);
 
   return academyLessons
     .filter((lesson) => {
@@ -52,10 +59,5 @@ export function searchLessonsLocal(query: string, limit = 8) {
       return blob.includes(q);
     })
     .slice(0, limit)
-    .map((lesson) => ({
-      id: lesson.id,
-      title: lesson.title,
-      trackId: lesson.trackId,
-      trackTitle: getTrack(lesson.trackId)?.title ?? ""
-    }));
+    .map(toResult);
 }
