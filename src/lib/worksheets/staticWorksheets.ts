@@ -5,20 +5,33 @@ import type { AcademyLesson, AcademyTrack } from "@/data/academyCourses";
 import { lessonsForTrack } from "@/data/academyCourses";
 import { worksheetFilename } from "./filename";
 
-/** Premium designer-approved PDFs with corrected Fitdog logo branding. */
-export const PUPPY_FOUNDATIONS_STATIC_TRACK_ID = "puppy-foundations";
+/** Tracks served from premium designer PDF bundles (fixed Fitdog logo). */
+export const STATIC_WORKSHEET_TRACKS = {
+  "puppy-foundations": {
+    dir: "content/worksheets/puppy-foundations",
+    minBytes: 80_000
+  },
+  "everyday-obedience": {
+    dir: "content/worksheets/everyday-obedience",
+    minBytes: 80_000
+  }
+} as const;
 
-const staticRoot = path.join(process.cwd(), "content/worksheets/puppy-foundations");
+export type StaticWorksheetTrackId = keyof typeof STATIC_WORKSHEET_TRACKS;
 
-export function puppyFoundationsStaticDir() {
-  return staticRoot;
+export function isStaticWorksheetTrack(trackId: string): trackId is StaticWorksheetTrackId {
+  return trackId in STATIC_WORKSHEET_TRACKS;
+}
+
+function staticRootForTrack(trackId: StaticWorksheetTrackId): string {
+  return path.join(process.cwd(), STATIC_WORKSHEET_TRACKS[trackId].dir);
 }
 
 export function staticWorksheetPath(track: AcademyTrack, lesson: AcademyLesson): string | null {
-  if (track.id !== PUPPY_FOUNDATIONS_STATIC_TRACK_ID) return null;
+  if (!isStaticWorksheetTrack(track.id)) return null;
 
   const filename = worksheetFilename(track, lesson);
-  const filePath = path.join(staticRoot, filename);
+  const filePath = path.join(staticRootForTrack(track.id), filename);
   return fs.existsSync(filePath) ? filePath : null;
 }
 
@@ -34,29 +47,40 @@ export function readStaticWorksheet(track: AcademyTrack, lesson: AcademyLesson):
   return fs.readFileSync(filePath);
 }
 
-export function verifyPuppyFoundationsStaticBundle(): string[] {
+export function verifyStaticWorksheetBundle(trackId: StaticWorksheetTrackId): string[] {
   const errors: string[] = [];
-  const lessons = lessonsForTrack(PUPPY_FOUNDATIONS_STATIC_TRACK_ID);
+  const config = STATIC_WORKSHEET_TRACKS[trackId];
+  const root = path.join(process.cwd(), config.dir);
+  const lessons = lessonsForTrack(trackId);
 
-  if (!fs.existsSync(staticRoot)) {
-    return [`Static worksheet directory missing: ${staticRoot}`];
+  if (!fs.existsSync(root)) {
+    return [`Static worksheet directory missing: ${root}`];
   }
 
   for (const lesson of lessons) {
-    const track = { id: PUPPY_FOUNDATIONS_STATIC_TRACK_ID } as AcademyTrack;
+    const track = { id: trackId } as AcademyTrack;
     const filename = worksheetFilename(track, lesson);
-    const filePath = path.join(staticRoot, filename);
+    const filePath = path.join(root, filename);
 
     if (!fs.existsSync(filePath)) {
-      errors.push(`Missing static PDF: ${filename}`);
+      errors.push(`[${trackId}] Missing static PDF: ${filename}`);
       continue;
     }
 
     const stat = fs.statSync(filePath);
-    if (stat.size < 80_000) {
-      errors.push(`${filename}: file too small (${stat.size} bytes)`);
+    if (stat.size < config.minBytes) {
+      errors.push(`[${trackId}] ${filename}: file too small (${stat.size} bytes)`);
     }
   }
 
   return errors;
+}
+
+export function verifyAllStaticWorksheetBundles(): string[] {
+  return (Object.keys(STATIC_WORKSHEET_TRACKS) as StaticWorksheetTrackId[]).flatMap(verifyStaticWorksheetBundle);
+}
+
+/** @deprecated Use verifyStaticWorksheetBundle("puppy-foundations") */
+export function verifyPuppyFoundationsStaticBundle(): string[] {
+  return verifyStaticWorksheetBundle("puppy-foundations");
 }

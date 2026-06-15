@@ -14,6 +14,7 @@
     "worksheets:verify": "tsx scripts/verify-worksheets.ts",
     "worksheets:export": "tsx scripts/export-worksheets.ts",
     "worksheets:sync-puppy": "tsx scripts/sync-puppy-worksheets.ts",
+    "worksheets:sync-everyday-obedience": "tsx scripts/sync-everyday-obedience-worksheets.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

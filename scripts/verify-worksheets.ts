@@ -2,11 +2,11 @@ import { academyLessons, getTrack } from "@/data/academyCourses";
 import { buildWorksheetContent, worksheetPageCount, worksheetSectionCount } from "@/lib/worksheets/buildContent";
 import { worksheetFilename } from "@/lib/worksheets/filename";
 
-import { verifyPuppyFoundationsStaticBundle, hasStaticWorksheet } from "@/lib/worksheets/staticWorksheets";
+import { hasStaticWorksheet, verifyAllStaticWorksheetBundles } from "@/lib/worksheets/staticWorksheets";
 
-const staticErrors = verifyPuppyFoundationsStaticBundle();
+const staticErrors = verifyAllStaticWorksheetBundles();
 if (staticErrors.length) {
-  console.error("Puppy Foundations static bundle errors:");
+  console.error("Static worksheet bundle errors:");
   console.error(staticErrors.join("\n"));
   process.exit(1);
 }

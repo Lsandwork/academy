@@ -5,7 +5,7 @@ import { academyLessons, academyTracks, getTrack } from "@/data/academyCourses";
 import { buildWorksheetContent, worksheetPageCount, worksheetSectionCount } from "@/lib/worksheets/buildContent";
 import { worksheetFilename } from "@/lib/worksheets/filename";
 import { getLessonWorksheetPdf } from "@/lib/worksheets/getWorksheetPdf";
-import { hasStaticWorksheet } from "@/lib/worksheets/staticWorksheets";
+import { hasStaticWorksheet, isStaticWorksheetTrack } from "@/lib/worksheets/staticWorksheets";
 
 export type WorksheetAuditResult = {
   lessonId: string;
@@ -47,7 +47,7 @@ export async function auditWorksheetPdf(lessonId: string, buffer: Buffer, filena
   if (!brand) issues.push("missing embedded brand images");
 
   if (isStatic) {
-    if (track.id !== "puppy-foundations") issues.push("unexpected static bundle track");
+    if (!isStaticWorksheetTrack(track.id)) issues.push(`unexpected static bundle track: ${track.id}`);
   } else {
     if (!content || sections! < 5) issues.push(`only ${sections} sections (expected 5+)`);
     if (!content?.trainingGoal) issues.push("missing training goal");
