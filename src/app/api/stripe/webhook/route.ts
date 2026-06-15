@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { logUserActivity } from "@/lib/activityLog";
 import { logError } from "@/lib/errors";
 import { parseJsonArray } from "@/lib/user";
 import { prisma } from "@/lib/db";
@@ -46,6 +47,17 @@ export async function POST(req: NextRequest) {
             accessLevel,
             purchasedLessonIds: JSON.stringify(nextPurchased)
           }
+        });
+
+        await logUserActivity({
+          userId,
+          userEmail: user.email,
+          category: "payment",
+          action: "purchase_completed",
+          summary: `${user.email} purchased ${planId.replace("_", " ")}${lessonId ? ` (${lessonId})` : ""}`,
+          metadata: { planId, lessonId: lessonId || null, accessLevel },
+          targetType: "user",
+          targetId: userId
         });
       }
     }

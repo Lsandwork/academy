@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, toSafeUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { PlanId, stripe, stripePrices } from "@/lib/stripe";
 
@@ -52,6 +53,17 @@ export async function POST(req: NextRequest) {
       planId,
       lessonId: lessonId || ""
     }
+  });
+
+  await logUserActivity({
+    userId: user.id,
+    userEmail: user.email,
+    category: "payment",
+    action: "checkout_started",
+    summary: `${user.email} started checkout for ${planId.replace("_", " ")}`,
+    metadata: { planId, lessonId: lessonId || null },
+    targetType: "checkout",
+    targetId: session.id
   });
 
   return NextResponse.json({ url: session.url });

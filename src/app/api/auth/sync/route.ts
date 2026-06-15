@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureProfileForAuthUser, redirectForRole, signOutCurrentUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
@@ -31,8 +32,25 @@ export async function POST(req: NextRequest) {
     }
 
     if (profile.mustChangePassword) {
+      await logUserActivity({
+        userId: profile.id,
+        userEmail: profile.email,
+        category: "auth",
+        action: "login",
+        summary: `${profile.email} signed in (password change required)`,
+        metadata: { role: profile.role }
+      });
       return NextResponse.json({ ok: true, redirect: "/change-password?required=1", mustChangePassword: true });
     }
+
+    await logUserActivity({
+      userId: profile.id,
+      userEmail: profile.email,
+      category: "auth",
+      action: "login",
+      summary: `${profile.email} signed in`,
+      metadata: { role: profile.role, redirect: redirectForRole(profile.role) }
+    });
 
     return NextResponse.json({ ok: true, redirect: redirectForRole(profile.role) });
   } catch (err) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity, truncateText } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { conversationTitle } from "@/lib/messaging";
 
@@ -107,6 +108,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await prisma.conversation.update({
       where: { id },
       data: { updatedAt: new Date() }
+    });
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "message",
+      action: "message_sent",
+      summary: `${user.email} sent a message`,
+      metadata: { preview: truncateText(text), conversationId: id },
+      targetType: "conversation",
+      targetId: id
     });
 
     return NextResponse.json({

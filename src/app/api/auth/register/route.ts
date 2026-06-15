@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -57,6 +58,14 @@ export async function POST(req: NextRequest) {
         email: normalizedEmail,
         name: displayName
       }
+    });
+
+    await logUserActivity({
+      userEmail: normalizedEmail,
+      category: "auth",
+      action: "register",
+      summary: `New account registered: ${normalizedEmail}`,
+      metadata: { name: displayName }
     });
 
     const supabase = await createClient();

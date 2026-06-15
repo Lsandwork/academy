@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { getLesson } from "@/data/academyCourses";
 import { logError } from "@/lib/errors";
@@ -53,6 +54,17 @@ export async function POST(req: NextRequest) {
           purchasedLessonIds: JSON.stringify([...parseJsonArray(current.purchasedLessonIds), lessonId])
         }
       });
+    });
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "credits",
+      action: "credits_redeemed",
+      summary: `${user.email} redeemed 1 credit for "${lesson.title}"`,
+      metadata: { lessonId },
+      targetType: "lesson",
+      targetId: lessonId
     });
 
     return NextResponse.json({ user: toSafeUser(updated) });

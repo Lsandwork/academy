@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { CONTRACT_STATUS } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 import { ensureContractConversation } from "@/lib/messaging";
@@ -42,6 +43,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
       await ensureContractConversation(prisma, contract.id, contract.owner.id, contract.trainer.userId);
 
+      await logUserActivity({
+        userId: contract.owner.id,
+        userEmail: contract.owner.email,
+        actor: admin,
+        category: "trainer",
+        action: "contract_approved",
+        summary: `Admin approved trainer assignment: ${contract.trainer.name} for ${contract.owner.email}`,
+        metadata: { dogName: contract.dogName, trainerName: contract.trainer.name },
+        targetType: "contract",
+        targetId: contract.id
+      });
+
       return NextResponse.json({ ok: true, contract: updated, message: "Assignment approved. Trainer and owner can now message." });
     }
 
@@ -52,6 +65,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           status: CONTRACT_STATUS.DECLINED,
           approvedById: admin.id
         }
+      });
+      await logUserActivity({
+        userId: contract.owner.id,
+        userEmail: contract.owner.email,
+        actor: admin,
+        category: "trainer",
+        action: "contract_declined",
+        summary: `Admin declined trainer assignment: ${contract.trainer.name} for ${contract.owner.email}`,
+        targetType: "contract",
+        targetId: contract.id
       });
       return NextResponse.json({ ok: true, contract: updated, message: "Assignment declined." });
     }

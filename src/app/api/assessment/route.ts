@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { recommendTrackFromAnswers } from "@/data/assessment";
 import { getTrack } from "@/data/academyCourses";
@@ -23,6 +24,17 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: { assessmentResult: JSON.stringify({ trackId, answers, completedAt: new Date().toISOString() }) }
+    });
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "assessment",
+      action: "assessment_completed",
+      summary: `${user.email} completed training assessment → ${track.title}`,
+      metadata: { trackId, trackTitle: track.title },
+      targetType: "track",
+      targetId: trackId
     });
 
     return NextResponse.json({ user: toSafeUser(updated), trackId, trackTitle: track.title });

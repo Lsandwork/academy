@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { createClient } from "@/lib/supabase/server";
 
 export async function PATCH(req: NextRequest) {
@@ -29,6 +30,14 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "profile",
+      action: "password_changed",
+      summary: `${user.email} changed their password`
+    });
 
     return NextResponse.json({ ok: true });
   } catch {

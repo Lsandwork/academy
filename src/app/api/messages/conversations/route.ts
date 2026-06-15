@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { findUserById } from "@/lib/authProfile";
+import { logUserActivity, truncateText } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import {
   canUsersMessage,
@@ -154,6 +155,23 @@ export async function POST(req: NextRequest) {
         data: { updatedAt: new Date() }
       });
     }
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "message",
+      action: initialBody ? "conversation_started" : "conversation_opened",
+      summary: initialBody
+        ? `${user.email} started a conversation with ${recipientUser.email}`
+        : `${user.email} opened a conversation with ${recipientUser.email}`,
+      metadata: {
+        recipientEmail: recipientUser.email,
+        preview: initialBody ? truncateText(initialBody) : undefined,
+        conversationId: conversation.id
+      },
+      targetType: "conversation",
+      targetId: conversation.id
+    });
 
     return NextResponse.json({ conversationId: conversation.id });
   } catch (error) {

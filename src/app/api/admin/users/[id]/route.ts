@@ -2,6 +2,7 @@ import { AccessLevel, Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { findUserById } from "@/lib/authProfile";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { logError } from "@/lib/errors";
 import { toSafeUser } from "@/lib/user";
@@ -45,6 +46,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
       return tx.user.update({ where: { id }, data });
     });
+
+    const changes: string[] = [];
+    if (body.role && body.role !== existing.role) changes.push(`role → ${body.role}`);
+    if (body.accessLevel && body.accessLevel !== existing.accessLevel) changes.push(`access → ${body.accessLevel}`);
+    if (typeof body.name === "string" && body.name.trim() !== (existing.name || "")) changes.push("name updated");
+    if (Array.isArray(body.purchasedLessonIds)) changes.push("purchased lessons updated");
+    if (Array.isArray(body.completedLessonIds)) changes.push("completed lessons updated");
+    if (typeof body.creditBalance === "number" && body.creditBalance !== existing.creditBalance) {
+      changes.push(`credits → ${body.creditBalance}`);
+    }
+
+    if (changes.length) {
+      await logUserActivity({
+        userId: id,
+        userEmail: existing.email,
+        actor: admin,
+        category: "admin",
+        action: "user_updated",
+        summary: `Admin updated ${existing.email}: ${changes.join(", ")}`,
+        metadata: { changes },
+        targetType: "user",
+        targetId: id
+      });
+    }
 
     return NextResponse.json({ user: toSafeUser(updated) });
   } catch (error) {

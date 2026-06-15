@@ -232,3 +232,24 @@ model AdminNotification {
   @@index([createdAt])
   @@schema("academy")
 }
+
+model UserActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  actorId    String?
+  actorEmail String?
+  category   String
+  action     String
+  summary    String
+  metadata   String?
+  targetType String?
+  targetId   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([category])
+  @@index([action])
+  @@schema("academy")
+}

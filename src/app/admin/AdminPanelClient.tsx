@@ -12,6 +12,23 @@ type AdminUser = SafeUser & {
 
 type ErrorRow = { id: string; severity: string; area: string; message: string; userEmail?: string | null; url?: string | null; device?: string | null; status: string; createdAt: string };
 
+type ActivityRow = {
+  id: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  actorId?: string | null;
+  actorEmail?: string | null;
+  category: string;
+  action: string;
+  summary: string;
+  metadata?: string | null;
+  targetType?: string | null;
+  targetId?: string | null;
+  createdAt: string;
+};
+
+const activityCategories = ["all", "auth", "profile", "lesson", "message", "admin", "payment", "trainer", "credits", "assessment"] as const;
+
 type TrainerContractRow = {
   id: string;
   status: string;
@@ -59,6 +76,10 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   const [aiDiagnostics, setAiDiagnostics] = useState<any>(null);
   const [toolResult, setToolResult] = useState<string>("");
   const [errorLogs, setErrorLogs] = useState<ErrorRow[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityRow[]>([]);
+  const [logsView, setLogsView] = useState<"activity" | "errors">("activity");
+  const [activityCategory, setActivityCategory] = useState<(typeof activityCategories)[number]>("all");
+  const [activitySearch, setActivitySearch] = useState("");
   const [trainerContracts, setTrainerContracts] = useState<TrainerContractRow[]>([]);
   const [adminNotifications, setAdminNotifications] = useState<AdminNotificationRow[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -98,13 +119,24 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
 
   useEffect(() => {
     if (tab === "logs" && isAdmin) {
-      fetch("/api/admin/errors")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.errors) setErrorLogs(data.errors);
-        });
+      if (logsView === "errors") {
+        fetch("/api/admin/errors")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.errors) setErrorLogs(data.errors);
+          });
+      } else {
+        const params = new URLSearchParams({ limit: "150" });
+        if (activityCategory !== "all") params.set("category", activityCategory);
+        if (activitySearch.trim()) params.set("q", activitySearch.trim());
+        fetch(`/api/admin/activity-logs?${params}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.logs) setActivityLogs(data.logs);
+          });
+      }
     }
-  }, [tab, isAdmin]);
+  }, [tab, isAdmin, logsView, activityCategory, activitySearch]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -684,34 +716,116 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
         )}
 
         {tab === "logs" && isAdmin && (
-          <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black">Activity & Error Logs</h2>
-            {!errorLogs.length ? (
-              <p className="mt-4 text-sm text-muted">No error log entries yet.</p>
+          <div className="mt-8 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setLogsView("activity")}
+                className={`rounded-full px-4 py-2 text-sm font-bold ${logsView === "activity" ? "bg-orange text-white" : "bg-white border border-gray-200 text-charcoal"}`}
+              >
+                User Activity
+              </button>
+              <button
+                onClick={() => setLogsView("errors")}
+                className={`rounded-full px-4 py-2 text-sm font-bold ${logsView === "errors" ? "bg-orange text-white" : "bg-white border border-gray-200 text-charcoal"}`}
+              >
+                Error Logs
+              </button>
+            </div>
+
+            {logsView === "activity" ? (
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-black">User Activity</h2>
+                    <p className="mt-1 text-sm text-muted">Logins, messages, admin changes, lessons, payments, and trainer requests.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={activityCategory}
+                      onChange={(e) => setActivityCategory(e.target.value as (typeof activityCategories)[number])}
+                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    >
+                      {activityCategories.map((c) => (
+                        <option key={c} value={c}>
+                          {c === "all" ? "All categories" : c}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={activitySearch}
+                      onChange={(e) => setActivitySearch(e.target.value)}
+                      placeholder="Search email or summary…"
+                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm min-w-[200px]"
+                    />
+                  </div>
+                </div>
+                {!activityLogs.length ? (
+                  <p className="mt-4 text-sm text-muted">No activity logged yet.</p>
+                ) : (
+                  <div className="mt-4 overflow-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 pr-4">Time</th>
+                          <th className="py-2 pr-4">Category</th>
+                          <th className="py-2 pr-4">User</th>
+                          <th className="py-2 pr-4">Action</th>
+                          <th className="py-2">Summary</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activityLogs.map((row) => (
+                          <tr key={row.id} className="border-b border-gray-50 align-top">
+                            <td className="py-2 pr-4 whitespace-nowrap text-muted">{new Date(row.createdAt).toLocaleString()}</td>
+                            <td className="py-2 pr-4">
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-black uppercase">{row.category}</span>
+                            </td>
+                            <td className="py-2 pr-4">
+                              <p className="font-semibold">{row.userEmail || "—"}</p>
+                              {row.actorEmail && row.actorEmail !== row.userEmail && (
+                                <p className="text-xs text-muted">by {row.actorEmail}</p>
+                              )}
+                            </td>
+                            <td className="py-2 pr-4 font-mono text-xs">{row.action}</td>
+                            <td className="py-2">{row.summary}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="mt-4 overflow-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="py-2 pr-4">Time</th>
-                      <th className="py-2 pr-4">Severity</th>
-                      <th className="py-2 pr-4">Area</th>
-                      <th className="py-2 pr-4">Message</th>
-                      <th className="py-2">User</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {errorLogs.map((row) => (
-                      <tr key={row.id} className="border-b border-gray-50">
-                        <td className="py-2 pr-4">{new Date(row.createdAt).toLocaleString()}</td>
-                        <td className="py-2 pr-4">{row.severity}</td>
-                        <td className="py-2 pr-4">{row.area}</td>
-                        <td className="py-2 pr-4">{row.message}</td>
-                        <td className="py-2">{row.userEmail || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-black">Error Logs</h2>
+                {!errorLogs.length ? (
+                  <p className="mt-4 text-sm text-muted">No error log entries yet.</p>
+                ) : (
+                  <div className="mt-4 overflow-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 pr-4">Time</th>
+                          <th className="py-2 pr-4">Severity</th>
+                          <th className="py-2 pr-4">Area</th>
+                          <th className="py-2 pr-4">Message</th>
+                          <th className="py-2">User</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {errorLogs.map((row) => (
+                          <tr key={row.id} className="border-b border-gray-50">
+                            <td className="py-2 pr-4">{new Date(row.createdAt).toLocaleString()}</td>
+                            <td className="py-2 pr-4">{row.severity}</td>
+                            <td className="py-2 pr-4">{row.area}</td>
+                            <td className="py-2 pr-4">{row.message}</td>
+                            <td className="py-2">{row.userEmail || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

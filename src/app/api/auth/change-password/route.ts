@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +26,14 @@ export async function POST(req: NextRequest) {
     await prisma.user.update({
       where: { id: user.id },
       data: { mustChangePassword: false }
+    });
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "auth",
+      action: "password_reset_required",
+      summary: `${user.email} completed required password change`
     });
 
     const redirect =

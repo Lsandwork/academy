@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { buildAssessmentReport } from "@/lib/assessmentReport";
 import { prisma } from "@/lib/db";
 import { notifyAdminsOfTrainerContact } from "@/lib/adminNotifications";
@@ -94,6 +95,17 @@ export async function POST(req: NextRequest) {
         data: updateData
       });
     }
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: user.email,
+      category: "trainer",
+      action: "trainer_request_submitted",
+      summary: `${user.email} requested trainer ${trainer.name}${dogName ? ` for ${dogName}` : ""}`,
+      metadata: { trainerId: trainer.id, trainerName: trainer.name, dogName, dogBreed, dogAge },
+      targetType: "contract",
+      targetId: contract.id
+    });
 
     return NextResponse.json({
       success: true,

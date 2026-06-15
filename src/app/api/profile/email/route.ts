@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { toSafeUser } from "@/lib/user";
@@ -37,6 +38,15 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: { email: normalized }
+    });
+
+    await logUserActivity({
+      userId: user.id,
+      userEmail: normalized,
+      category: "profile",
+      action: "email_changed",
+      summary: `${user.email} changed email to ${normalized}`,
+      metadata: { previousEmail: user.email }
     });
 
     return NextResponse.json({ user: toSafeUser(updated) });

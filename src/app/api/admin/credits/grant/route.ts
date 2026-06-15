@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { toSafeUser } from "@/lib/user";
 
@@ -26,6 +27,18 @@ export async function POST(req: NextRequest) {
         where: { id: userId },
         data: { creditBalance: { increment: amount } }
       });
+    });
+
+    await logUserActivity({
+      userId,
+      userEmail: updated.email,
+      actor: admin,
+      category: "credits",
+      action: "credits_granted",
+      summary: `Admin granted ${amount} credit(s) to ${updated.email}`,
+      metadata: { amount, reason: reason || "Admin grant" },
+      targetType: "user",
+      targetId: userId
     });
 
     return NextResponse.json({ user: toSafeUser(updated) });
