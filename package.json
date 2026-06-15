@@ -12,6 +12,8 @@
     "provision": "node scripts/provision-production.mjs",
     "videos:checklist": "cat scripts/lesson-video-upload-checklist.txt",
     "worksheets:verify": "tsx scripts/verify-worksheets.ts",
+    "worksheets:export": "tsx scripts/export-worksheets.ts",
+    "worksheets:sync-puppy": "tsx scripts/sync-puppy-worksheets.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

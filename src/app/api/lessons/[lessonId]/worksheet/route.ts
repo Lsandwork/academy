@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLesson, getTrack } from "@/data/academyCourses";
 import { getCurrentUser } from "@/lib/auth";
 import { worksheetFilename } from "@/lib/worksheets/filename";
-import { renderLessonWorksheetPdf } from "@/lib/worksheets/render";
+import { getLessonWorksheetPdf } from "@/lib/worksheets/getWorksheetPdf";
 import { hasLessonAccess } from "@/lib/user";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ lessonId: string }> }) {
@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ les
   }
 
   try {
-    const { buffer } = await renderLessonWorksheetPdf(lesson, track);
+    const { buffer } = await getLessonWorksheetPdf(lesson, track);
     const filename = worksheetFilename(track, lesson);
 
     return new NextResponse(new Uint8Array(buffer), {

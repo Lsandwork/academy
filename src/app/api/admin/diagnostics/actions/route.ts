@@ -9,7 +9,7 @@ import { hasLessonAccess } from "@/lib/user";
 import { stripe, stripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 import { sendTrainerTestEmail } from "@/lib/trainerNotify";
-import { renderLessonWorksheetPdf } from "@/lib/worksheets/render";
+import { getLessonWorksheetPdf } from "@/lib/worksheets/getWorksheetPdf";
 
 export async function POST(req: NextRequest) {
   try {
@@ -143,17 +143,17 @@ export async function POST(req: NextRequest) {
         });
 
       case "test_worksheet": {
-        const lesson = getLesson("building-alone-time-duration");
+        const lesson = getLesson("bringing-your-puppy-home");
         const track = lesson ? getTrack(lesson.trackId) : null;
         if (!lesson || !track) {
           return NextResponse.json({ ok: false, action, message: "Sample lesson not found." });
         }
-        const { buffer, content } = await renderLessonWorksheetPdf(lesson, track);
+        const { buffer, source } = await getLessonWorksheetPdf(lesson, track);
         return NextResponse.json({
-          ok: buffer.length > 5000,
+          ok: buffer.length > 80_000,
           action,
-          message: `Generated ${content.pages.length}-page PDF (${Math.round(buffer.length / 1024)} KB) for "${lesson.title}".`,
-          pages: content.pages.length,
+          message: `Served ${source} PDF (${Math.round(buffer.length / 1024)} KB) for "${lesson.title}".`,
+          source,
           bytes: buffer.length
         });
       }

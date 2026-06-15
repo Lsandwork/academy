@@ -9,13 +9,7 @@ export type WorksheetDayCard = { day: string; title: string; body: string; accen
 
 export type WorksheetDecisionOption = { label: string; action: string; accent: "green" | "sky" | "orange" };
 
-export type WorksheetPageContent = {
-  worksheetLabel?: string;
-  headline?: string;
-  intro?: string;
-  trainerNote?: string;
-  startHereFields?: string[];
-  ruleCards?: WorksheetRuleCard[];
+export type WorksheetSection = {
   sectionNumber?: number;
   sectionTitle?: string;
   checklistItems?: string[];
@@ -24,8 +18,6 @@ export type WorksheetPageContent = {
   table?: WorksheetTable;
   dayCards?: WorksheetDayCard[];
   decisionOptions?: WorksheetDecisionOption[];
-  reflectionPrompts?: string[];
-  callout?: { title: string; body: string; variant: "peach" | "sky" | "orange" };
   gridCards?: { title: string; prompt: string; accent: "sky" | "orange" }[];
   bodyLanguageScale?: { score: number; label: string; color: string }[];
   supplies?: string[];
@@ -33,7 +25,22 @@ export type WorksheetPageContent = {
   troubleshooting?: { trigger: string; tryThis: string }[];
   successChecklist?: string[];
   homework?: string;
+  reflectionPrompts?: string[];
+  callout?: { title: string; body: string; variant: "peach" | "sky" | "orange" };
   safetyNote?: string;
+  splitColumns?: boolean;
+};
+
+export type WorksheetPageContent = {
+  isCover?: boolean;
+  worksheetLabel?: string;
+  headline?: string;
+  intro?: string;
+  trainerNote?: string;
+  startHereFields?: string[];
+  ruleCards?: WorksheetRuleCard[];
+  keySkills?: string[];
+  sections: WorksheetSection[];
 };
 
 export type WorksheetContent = {

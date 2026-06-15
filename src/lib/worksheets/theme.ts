@@ -5,7 +5,7 @@ export const worksheetTheme = {
   skyLight: "#E8F4FF",
   peach: "#FFF4ED",
   peachBorder: "#FFDCC8",
-  charcoal: "#1C2430",
+  charcoal: "#2C343C",
   muted: "#5C6773",
   lightGray: "#F4F6F8",
   white: "#FFFFFF",

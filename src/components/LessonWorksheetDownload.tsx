@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
+import Image from "next/image";
 
 export function LessonWorksheetDownload({
   lessonId,
@@ -51,15 +52,20 @@ export function LessonWorksheetDownload({
     <section className="mt-6 overflow-hidden rounded-3xl border border-sky/20 bg-gradient-to-br from-white via-white to-sky/5 p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-black uppercase tracking-wide text-sky">Lesson Worksheet</p>
-          <h2 className="mt-1 text-xl font-black text-charcoal">{worksheetTitle}</h2>
+          <div className="flex items-center gap-3">
+            <Image src={fitdogAcademyAssets.logos.dogHead64} alt="Fitdog" width={36} height={36} />
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-sky">Fitdog Training Academy</p>
+              <p className="text-[10px] font-semibold text-muted">Branded lesson worksheet</p>
+            </div>
+          </div>
+          <h2 className="mt-3 text-xl font-black text-charcoal">{worksheetTitle}</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Download your guided worksheet to practice <strong className="font-semibold text-charcoal">{lessonTitle}</strong> at
             home, track progress, and help set your dog up for success.
           </p>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={fitdogAcademyAssets.icons.benefits.videoLessons} alt="" width={40} height={40} className="hidden shrink-0 opacity-80 sm:block" />
+        <Image src={fitdogAcademyAssets.logos.academyLockupLight} alt="" width={120} height={28} className="hidden shrink-0 opacity-90 sm:block" />
       </div>
 
       <button
