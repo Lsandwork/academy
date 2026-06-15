@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ les
   }
 
   try {
-    const { buffer } = await getLessonWorksheetPdf(lesson, track);
+    const { buffer, source } = await getLessonWorksheetPdf(lesson, track);
     const filename = worksheetFilename(track, lesson);
 
     return new NextResponse(new Uint8Array(buffer), {
@@ -35,7 +35,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ les
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
-        "Cache-Control": "private, max-age=3600"
+        "Cache-Control": "private, max-age=3600",
+        "X-Worksheet-Source": source
       }
     });
   } catch (error) {

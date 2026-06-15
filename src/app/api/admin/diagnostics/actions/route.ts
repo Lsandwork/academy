@@ -143,16 +143,20 @@ export async function POST(req: NextRequest) {
         });
 
       case "test_worksheet": {
-        const lesson = getLesson("bringing-your-puppy-home");
+        const lesson = getLesson("how-dogs-learn");
         const track = lesson ? getTrack(lesson.trackId) : null;
         if (!lesson || !track) {
           return NextResponse.json({ ok: false, action, message: "Sample lesson not found." });
         }
         const { buffer, source } = await getLessonWorksheetPdf(lesson, track);
+        const expectedStatic = source === "static" && buffer.length >= 90_000;
         return NextResponse.json({
-          ok: buffer.length > 80_000,
+          ok: expectedStatic,
           action,
-          message: `Served ${source} PDF (${Math.round(buffer.length / 1024)} KB) for "${lesson.title}".`,
+          message:
+            source === "static"
+              ? `Premium static PDF (${Math.round(buffer.length / 1024)} KB) for "${lesson.title}".`
+              : `WARNING: served ${source} PDF (${Math.round(buffer.length / 1024)} KB) — expected static premium file.`,
           source,
           bytes: buffer.length
         });

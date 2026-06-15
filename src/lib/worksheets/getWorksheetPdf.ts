@@ -1,5 +1,5 @@
 import type { AcademyLesson, AcademyTrack } from "@/data/academyCourses";
-import { readStaticWorksheet, hasStaticWorksheet } from "./staticWorksheets";
+import { isStaticWorksheetTrack, readStaticWorksheet } from "./staticWorksheets";
 import { renderLessonWorksheetPdf } from "./render";
 import type { WorksheetContent } from "./types";
 
@@ -9,9 +9,12 @@ export type WorksheetPdfResult = {
   content?: WorksheetContent;
 };
 
-/** Serves premium static PDFs when available; otherwise renders dynamically. */
+/**
+ * Premium static tracks (Puppy Foundations, Everyday Obedience) must never
+ * fall back to auto-generated PDFs — those are client-facing quality issues.
+ */
 export async function getLessonWorksheetPdf(lesson: AcademyLesson, track: AcademyTrack): Promise<WorksheetPdfResult> {
-  if (hasStaticWorksheet(track, lesson)) {
+  if (isStaticWorksheetTrack(track.id)) {
     return {
       buffer: readStaticWorksheet(track, lesson),
       source: "static"

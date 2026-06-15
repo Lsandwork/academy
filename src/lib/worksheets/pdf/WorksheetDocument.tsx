@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   checklistGrid: { flexDirection: "row", flexWrap: "wrap" },
   checkItem: { width: "48%", flexDirection: "row", alignItems: "flex-start", marginBottom: 4, paddingRight: 6 },
   checkbox: { width: 9, height: 9, borderRadius: 2, borderWidth: 1, borderColor: t.sky, marginRight: 5, marginTop: 1 },
-  bullet: { fontSize: 8.5, color: t.charcoal, lineHeight: 1.35, flex: 1 },
+  bullet: { fontSize: 9.5, color: t.charcoal, lineHeight: 1.45, flex: 1 },
   suppliesBox: { backgroundColor: t.lightGray, borderRadius: t.radius, padding: 8, marginTop: 4, marginBottom: 4 },
   stepRow: { flexDirection: "row", marginBottom: 4 },
   stepNum: { width: 14, fontSize: 8.5, fontWeight: "bold", color: t.orange },
@@ -316,42 +316,27 @@ function WorksheetSectionBlock({ section }: { section: WorksheetSection }) {
         </View>
       )}
 
-      {section.splitColumns && section.mistakes && section.troubleshooting ? (
-        <View style={s.splitRow}>
-          <View style={s.splitCol}>
-            <Text style={s.splitTitle}>AVOID THESE</Text>
-            {section.mistakes.map((m) => (
-              <Text key={m} style={[s.bullet, { marginBottom: 3 }]}>
-                • {m}
-              </Text>
-            ))}
-          </View>
-          <View style={s.splitCol}>
-            <Text style={s.splitTitle}>IF THIS HAPPENS</Text>
-            {section.troubleshooting.map((row) => (
-              <View key={row.trigger} style={{ marginBottom: 4 }}>
-                <Text style={[s.bullet, { fontWeight: "bold" }]}>{row.trigger}</Text>
-                <Text style={s.bullet}>Try: {row.tryThis}</Text>
-              </View>
-            ))}
-          </View>
+      {section.mistakes && section.mistakes.length > 0 && (
+        <View style={{ marginBottom: 6 }}>
+          <Text style={[s.splitTitle, { marginBottom: 4 }]}>AVOID THESE</Text>
+          {section.mistakes.map((m) => (
+            <Text key={m} style={[s.bullet, { marginBottom: 4 }]}>
+              • {m}
+            </Text>
+          ))}
         </View>
-      ) : (
-        <>
-          {section.mistakes &&
-            section.mistakes.map((m) => (
-              <Text key={m} style={[s.bullet, { marginBottom: 3 }]}>
-                • {m}
-              </Text>
-            ))}
-          {section.troubleshooting &&
-            section.troubleshooting.map((row) => (
-              <View key={row.trigger} style={{ marginBottom: 4 }}>
-                <Text style={[s.bullet, { fontWeight: "bold" }]}>If: {row.trigger}</Text>
-                <Text style={s.bullet}>Try: {row.tryThis}</Text>
-              </View>
-            ))}
-        </>
+      )}
+
+      {section.troubleshooting && section.troubleshooting.length > 0 && (
+        <View style={{ marginTop: 4, marginBottom: 6 }}>
+          <Text style={[s.splitTitle, { marginBottom: 4 }]}>IF THIS HAPPENS, TRY THIS</Text>
+          {section.troubleshooting.map((row) => (
+            <View key={row.trigger} style={{ marginBottom: 5 }} wrap={false}>
+              <Text style={[s.bullet, { fontWeight: "bold" }]}>{row.trigger}</Text>
+              <Text style={s.bullet}>Try: {row.tryThis}</Text>
+            </View>
+          ))}
+        </View>
       )}
 
       {section.successChecklist && (

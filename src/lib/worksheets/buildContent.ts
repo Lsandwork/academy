@@ -29,28 +29,61 @@ function suppliesForLesson(lesson: AcademyLesson, category: TrackCategory): stri
 
 function practiceSteps(lesson: AcademyLesson, category: TrackCategory): string[] {
   if (lesson.exercise?.length) return lesson.exercise.slice(0, MAX_STEPS);
+
+  const lessonPlans: Record<string, string[]> = {
+    "how-dogs-learn": [
+      "1. Pick one everyday behavior your dog already offers (sit, coming to the kitchen, etc.).",
+      "2. Notice what happens immediately before that behavior — that is the cue.",
+      "3. Mark with “yes” the instant the behavior happens. Deliver a treat within 2 seconds.",
+      "4. Ask: what is my dog getting from this behavior? Write one sentence.",
+      "5. End after 3–5 clean reps while your dog is still engaged."
+    ],
+    "marker-training": [
+      "1. Say “yes” and immediately give a treat — repeat 10 times with no behavior required.",
+      "2. Wait for your dog to look at you. Mark and treat the moment they do.",
+      "3. Mark a natural sit. Reward placement: treat delivered to where you want the skill.",
+      "4. Practice in a quiet room before adding any distraction.",
+      "5. End while your dog is still excited to work with you."
+    ],
+    "name-recognition-and-focus": [
+      "1. Say your dog’s name once in a quiet room. Mark eye contact. Treat.",
+      "2. Increase difficulty: turn your body slightly away. Mark a glance toward you.",
+      "3. Practice with mild distraction (toy on floor, person walking past).",
+      "4. If your dog ignores the name, make it easier — do not repeat the cue.",
+      "5. Log how many one-cue check-ins you got out of 5 tries."
+    ],
+    "recall": [
+      "1. In a fenced or quiet area, say your recall cue once. Run backward if needed.",
+      "2. Reward with high-value food — not their everyday kibble.",
+      "3. Practice 5 recalls on a long line before trying off-leash.",
+      "4. Never call your dog to end something fun without a trade.",
+      "5. End on a successful recall while your dog is still running toward you."
+    ],
+    "loose-leash-walking": [
+      "1. Mark and treat when the leash is loose and your dog is beside you.",
+      "2. If the leash tightens, stop walking. Restart when the leash loosens.",
+      "3. Change direction without yanking — invite your dog to follow.",
+      "4. Use sniff breaks as rewards for loose-leash position.",
+      "5. Keep sessions to 5 minutes on one block before expanding."
+    ]
+  };
+
+  if (lessonPlans[lesson.id]) return lessonPlans[lesson.id];
+
   if (lesson.progression?.length) {
-    return lesson.progression.slice(0, MAX_STEPS).map((step, i) => `${i + 1}. ${step} — practice where your dog stays calm and can eat.`);
+    return lesson.progression.slice(0, MAX_STEPS).map((step, i) => `${i + 1}. ${step}`);
   }
 
-  const fromTopics = lesson.topics.slice(0, MAX_STEPS).map((topic, i) => {
-    const tail =
-      category === "separation"
-        ? " — 30–90 sec, end before stress."
-        : category === "reactivity"
-          ? " — at a distance where your dog can eat and think."
-          : " — 2–3 min, reward success, end while easy.";
-    return `${i + 1}. ${topic}${tail}`;
-  });
+  const fromTopics = lesson.topics.slice(0, MAX_STEPS).map((topic, i) => `${i + 1}. Practice ${topic.toLowerCase()} in a quiet room for 2–3 minutes.`);
 
   if (fromTopics.length >= 3) return fromTopics;
 
   return [
-    "1. Review the lesson video and pick one focus skill.",
-    "2. Set up treats and a quiet space before you begin.",
+    "1. Review the lesson video and choose one focus skill.",
+    "2. Gather treats and set up a quiet training space.",
     "3. Run a 3–5 minute session. Mark calm success.",
     "4. End while your dog is still doing well.",
-    "5. Log one note for next time."
+    "5. Log one note for your next session."
   ];
 }
 
@@ -211,9 +244,9 @@ function coverPage(lesson: AcademyLesson, track: AcademyTrack, category: TrackCa
   };
 }
 
-function workPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPageContent {
+function practicePage(lesson: AcademyLesson, category: TrackCategory): WorksheetPageContent {
   return {
-    worksheetLabel: "PRACTICE · TRACK · REVIEW",
+    worksheetLabel: "PRACTICE · TRACK",
     sections: [
       {
         sectionNumber: 3,
@@ -224,12 +257,22 @@ function workPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPage
         sectionNumber: 4,
         sectionTitle: "Practice tracker",
         table: { headers: trackerHeaders(category, lesson), rows: trackerRows(category, lesson) }
-      },
+      }
+    ]
+  };
+}
+
+function reviewPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPageContent {
+  return {
+    worksheetLabel: "REVIEW · REFLECT",
+    sections: [
       {
         sectionNumber: 5,
-        sectionTitle: "Mistakes & troubleshooting",
-        mistakes: mistakesForLesson(lesson, category),
-        splitColumns: true,
+        sectionTitle: "Common mistakes to avoid",
+        mistakes: mistakesForLesson(lesson, category)
+      },
+      {
+        sectionTitle: "If this happens, try this",
         troubleshooting: troubleshooting(lesson, category)
       },
       {
@@ -239,29 +282,6 @@ function workPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPage
         homework:
           lesson.homework ||
           `Practice one skill from "${lesson.title}" three times this week. Note what to simplify.`,
-        reflectionPrompts: ["What went well?", "When did my dog struggle?", "Questions for my Fitdog trainer:"],
-        safetyNote: safetyNote(category)
-      }
-    ]
-  };
-}
-
-function reviewOnlyPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPageContent {
-  return {
-    worksheetLabel: "REVIEW · REFLECT",
-    sections: [
-      {
-        sectionNumber: 5,
-        sectionTitle: "Mistakes & troubleshooting",
-        mistakes: mistakesForLesson(lesson, category),
-        splitColumns: true,
-        troubleshooting: troubleshooting(lesson, category)
-      },
-      {
-        sectionNumber: 6,
-        sectionTitle: "Ready to progress?",
-        successChecklist: successChecklist(lesson, category),
-        homework: lesson.homework || `Practice "${lesson.title}" three times this week.`,
         reflectionPrompts: ["What went well?", "When did my dog struggle?", "Questions for my Fitdog trainer:"],
         safetyNote: safetyNote(category)
       }
@@ -315,6 +335,10 @@ function separationAssessmentPages(lesson: AcademyLesson, track: AcademyTrack): 
   ];
 }
 
+function reviewOnlyPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPageContent {
+  return reviewPage(lesson, category);
+}
+
 function separationDurationPages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
   return [
     coverPage(lesson, track, "separation"),
@@ -355,7 +379,7 @@ export function buildWorksheetContent(lesson: AcademyLesson, track: AcademyTrack
   let pages: WorksheetPageContent[];
   if (lesson.id === "alone-time-assessment") pages = separationAssessmentPages(lesson, track);
   else if (lesson.id === "building-alone-time-duration") pages = separationDurationPages(lesson, track);
-  else pages = [coverPage(lesson, track, category), workPage(lesson, category)];
+  else pages = [coverPage(lesson, track, category), practicePage(lesson, category), reviewPage(lesson, category)];
 
   return {
     courseName: track.title,
