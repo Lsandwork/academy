@@ -1,10 +1,72 @@
 import { PrismaClient, Role, User } from "@prisma/client";
+import { listAllUsers } from "./authProfile";
 import { isApprovedContractStatus } from "./contracts";
 
 export async function getAdminUsers(prisma: PrismaClient) {
-  return prisma.user.findMany({
-    where: { role: { in: [Role.ADMIN, Role.STAFF] } },
-    select: { id: true, name: true, email: true, role: true }
+  try {
+    return await prisma.user.findMany({
+      where: { role: { in: [Role.ADMIN, Role.STAFF] } },
+      select: { id: true, name: true, email: true, role: true }
+    });
+  } catch {
+    const all = await listAllUsers();
+    return all
+      .filter((u) => u.role === Role.ADMIN || u.role === Role.STAFF)
+      .map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role }));
+  }
+}
+
+export async function getMessageableRecipients(
+  prisma: PrismaClient,
+  currentUser: Pick<User, "id" | "role">,
+  query: string
+) {
+  const normalized = query.toLowerCase();
+  let pool: Pick<User, "id" | "name" | "email" | "role">[] = [];
+
+  if (currentUser.role === Role.ADMIN || currentUser.role === Role.STAFF) {
+    const all = await listAllUsers();
+    pool = all.filter((u) => u.id !== currentUser.id);
+  } else if (currentUser.role === Role.TRAINER) {
+    const contracts = await prisma.trainerContract.findMany({
+      where: {
+        status: { in: ["approved", "active", "completed"] },
+        trainer: { userId: currentUser.id }
+      },
+      include: { owner: { select: { id: true, name: true, email: true, role: true } } }
+    });
+    pool = contracts.map((c) => c.owner);
+    const admins = await getAdminUsers(prisma);
+    pool = [...pool, ...admins.filter((a) => a.id !== currentUser.id)];
+  } else {
+    const admins = await getAdminUsers(prisma);
+    pool = [...admins];
+
+    const trainerContracts = await prisma.trainerContract.findMany({
+      where: {
+        ownerId: currentUser.id,
+        status: { in: ["approved", "active", "completed"] }
+      },
+      include: { trainer: { select: { userId: true, name: true, email: true } } }
+    });
+
+    for (const contract of trainerContracts) {
+      if (!contract.trainer.userId) continue;
+      pool.push({
+        id: contract.trainer.userId,
+        name: contract.trainer.name,
+        email: contract.trainer.email,
+        role: Role.TRAINER
+      });
+    }
+  }
+
+  const seen = new Set<string>();
+  return pool.filter((u) => {
+    if (seen.has(u.id)) return false;
+    seen.add(u.id);
+    const haystack = `${u.name ?? ""} ${u.email}`.toLowerCase();
+    return haystack.includes(normalized);
   });
 }
 
