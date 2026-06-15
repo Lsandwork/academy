@@ -92,6 +92,13 @@ export default function LessonClient({
             )}
             {message && <p className="mt-4 text-sm font-semibold text-red-600">{message}</p>}
           </div>
+
+          <LessonWorksheetDownload
+            lessonId={lesson.id}
+            lessonTitle={lesson.title}
+            worksheetTitle={lesson.worksheetTitle}
+            unlocked={false}
+          />
         </main>
         <FitdogAiChatWidget
           pageUrl={`/library/${track.id}/lessons/${lesson.id}`}

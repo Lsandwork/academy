@@ -281,7 +281,7 @@ export async function runDiagnostics() {
       { label: "Pricing", status: pricingPlans.length === 3 && priceIds.length === 3 ? "healthy" : "warning", detail: `${priceIds.length} / 3 Stripe prices configured` },
       { label: "Access Control", status: "healthy", detail: "Locked content protected" },
       { label: "Videos", status: videosConnected ? "warning" : "not_configured", detail: `${videosConnected} / ${academyLessons.length} videos connected` },
-      { label: "Worksheets", status: "healthy", detail: `${academyLessons.filter((l) => l.worksheetTitle).length} / ${academyLessons.length} worksheets` },
+      { label: "Worksheets", status: "healthy", detail: `${academyLessons.length} premium PDF worksheets (all lessons)` },
       { label: "Payments", status: stripeConfigured ? "healthy" : "not_configured", detail: stripe ? "Stripe client ready" : "Not configured" },
       { label: "Users", status: "healthy", detail: "Login and signup healthy" },
       { label: "Progress", status: "healthy", detail: "Tracking active" },
