@@ -23,7 +23,7 @@ export const fitdogAcademyAssets = {
   /** Real photography for featured track cards (not AI-generated pack art) */
   coursePhotos: {
     puppyFoundations: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop&q=80",
-    everydayObedience: `${base}/courses/everyday-obedience.png`,
+    everydayObedience: "https://images.unsplash.com/photo-1551779891-b83901e1f8b3?w=800&auto=format&fit=crop&q=80",
     calmHomeSkills: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&auto=format&fit=crop&q=80",
     separationSupport: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=800&auto=format&fit=crop&q=80",
     leashReactivityReset: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
@@ -76,7 +76,7 @@ export const trackAssetMap: Record<string, { thumbnail: string; icon: string }> 
     icon: fitdogAcademyAssets.icons.course.puppyFoundations
   },
   "everyday-obedience": {
-    thumbnail: fitdogAcademyAssets.courses.everydayObedience,
+    thumbnail: fitdogAcademyAssets.coursePhotos.everydayObedience,
     icon: fitdogAcademyAssets.icons.course.everydayObedience
   },
   "calm-home-skills": {
