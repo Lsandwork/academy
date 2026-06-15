@@ -66,15 +66,24 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
 
   const selected = users.find((u) => u.id === selectedId);
 
+  const [usersLoaded, setUsersLoaded] = useState(false);
+
+  async function loadUsers() {
+    const res = await fetch("/api/admin/users");
+    const data = await res.json();
+    if (!res.ok || !data.users) {
+      setError(data.error || "Could not load users.");
+      setUsersLoaded(true);
+      return;
+    }
+    setUsers(data.users);
+    if (data.users[0] && !selectedId) setSelectedId(data.users[0].id);
+    setUsersLoaded(true);
+    setError("");
+  }
+
   useEffect(() => {
-    fetch("/api/admin/users")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.users) {
-          setUsers(data.users);
-          if (data.users[0]) setSelectedId(data.users[0].id);
-        }
-      });
+    loadUsers();
   }, []);
 
   useEffect(() => {
@@ -176,6 +185,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     }
     setUsers((list) => list.map((u) => (u.id === data.user.id ? { ...u, ...data.user } : u)));
     setMessage("User updated.");
+    await loadUsers();
   }
 
   async function grantCredits() {
@@ -196,6 +206,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     }
     setUsers((list) => list.map((u) => (u.id === data.user.id ? { ...u, ...data.user } : u)));
     setMessage(`Granted ${amount} credit(s).`);
+    await loadUsers();
   }
 
   async function runAiAdminTest(action: string) {
@@ -348,12 +359,18 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
             <div className="rounded-3xl bg-white p-6 shadow-sm">
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." className="w-full rounded-xl border border-gray-200 px-4 py-3" />
               <div className="mt-4 max-h-[420px] overflow-auto divide-y divide-gray-100">
-                {filtered.map((u) => (
-                  <button key={u.id} onClick={() => setSelectedId(u.id)} className={`w-full py-3 text-left ${selectedId === u.id ? "text-orange" : "text-charcoal"}`}>
-                    <p className="font-bold">{u.name || u.email}</p>
-                    <p className="text-sm text-muted">{u.email}</p>
-                  </button>
-                ))}
+                {!usersLoaded ? (
+                  <p className="py-4 text-sm text-muted">Loading users…</p>
+                ) : filtered.length ? (
+                  filtered.map((u) => (
+                    <button key={u.id} onClick={() => setSelectedId(u.id)} className={`w-full py-3 text-left ${selectedId === u.id ? "text-orange" : "text-charcoal"}`}>
+                      <p className="font-bold">{u.name || u.email}</p>
+                      <p className="text-sm text-muted">{u.email}</p>
+                    </button>
+                  ))
+                ) : (
+                  <p className="py-4 text-sm text-muted">No users found. {error || "Try refreshing the page."}</p>
+                )}
               </div>
             </div>
 

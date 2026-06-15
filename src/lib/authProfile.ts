@@ -44,9 +44,69 @@ function mapRawUser(row: RawUserRow): User {
   };
 }
 
-function isTrainerEnumError(error: unknown) {
+function isPrismaEnumError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("TRAINER") && message.includes("enum");
+  return message.includes("not found in enum") || (message.includes("TRAINER") && message.includes("enum"));
+}
+
+export async function listAllUsers(options?: {
+  includeRecentCredits?: boolean;
+  orderBy?: "createdAt" | "email";
+}) {
+  const include = options?.includeRecentCredits
+    ? { creditTransactions: { orderBy: { createdAt: "desc" as const }, take: 5 } }
+    : undefined;
+
+  try {
+    return await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      include
+    });
+  } catch (error) {
+    if (!isPrismaEnumError(error)) throw error;
+  }
+
+  const rows = await prisma.$queryRaw<RawUserRow[]>`
+    SELECT * FROM academy."User" ORDER BY "createdAt" DESC
+  `;
+  const users = rows.map(mapRawUser);
+
+  if (!options?.includeRecentCredits) return users;
+
+  const credits = await prisma.creditTransaction.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
+  const creditsByUser = new Map<string, typeof credits>();
+  for (const tx of credits) {
+    const list = creditsByUser.get(tx.userId) ?? [];
+    if (list.length < 5) {
+      list.push(tx);
+      creditsByUser.set(tx.userId, list);
+    }
+  }
+
+  return users.map((user) => ({
+    ...user,
+    creditTransactions: creditsByUser.get(user.id) ?? []
+  }));
+}
+
+export async function findUserById(id: string) {
+  try {
+    return await prisma.user.findUnique({ where: { id } });
+  } catch (error) {
+    if (!isPrismaEnumError(error)) throw error;
+  }
+
+  const rows = await prisma.$queryRaw<RawUserRow[]>`
+    SELECT * FROM academy."User" WHERE id = ${id} LIMIT 1
+  `;
+  return rows[0] ? mapRawUser(rows[0]) : null;
+}
+
+function isTrainerEnumError(error: unknown) {
+  return isPrismaEnumError(error);
 }
 
 export async function findUserProfile(authUser: { id: string; email?: string }) {

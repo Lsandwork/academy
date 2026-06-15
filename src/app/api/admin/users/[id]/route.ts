@@ -1,6 +1,7 @@
 import { AccessLevel, Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { findUserById } from "@/lib/authProfile";
 import { prisma } from "@/lib/db";
 import { logError } from "@/lib/errors";
 import { toSafeUser } from "@/lib/user";
@@ -11,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = await req.json();
 
-    const existing = await prisma.user.findUnique({ where: { id } });
+    const existing = await findUserById(id);
     if (!existing) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
