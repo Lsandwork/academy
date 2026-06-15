@@ -14,6 +14,18 @@ export const STATIC_WORKSHEET_TRACKS = {
   "everyday-obedience": {
     dir: "content/worksheets/everyday-obedience",
     minBytes: 80_000
+  },
+  "calm-home-skills": {
+    dir: "content/worksheets/calm-home-skills",
+    minBytes: 80_000
+  },
+  "separation-support": {
+    dir: "content/worksheets/separation-support",
+    minBytes: 80_000
+  },
+  "leash-reactivity-reset": {
+    dir: "content/worksheets/leash-reactivity-reset",
+    minBytes: 80_000
   }
 } as const;
 
