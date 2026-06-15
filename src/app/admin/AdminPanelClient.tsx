@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { getLesson } from "@/data/academyCourses";
-import { SafeUser, accessLabel, parseJsonArray } from "@/lib/user";
+import { SafeUser, accessLabel, parseJsonArray, roleLabel } from "@/lib/user";
+import type { AccessLevel, Role } from "@prisma/client";
 import type { DiagnosticStatus } from "@/lib/diagnostics";
 
 type AdminUser = SafeUser & {
@@ -53,7 +54,34 @@ type AdminNotificationRow = {
   createdAt: string;
 };
 
-const tabs = ["overview", "users", "access", "credits", "trainers", "diagnostics", "logs"] as const;
+const tabs = ["overview", "users", "credits", "trainers", "diagnostics", "logs"] as const;
+
+const roleOptions: { value: Role; label: string; description: string }[] = [
+  { value: "USER", label: "Standard user", description: "Regular academy member — library, lessons, and messaging." },
+  { value: "TRAINER", label: "Trainer", description: "Certified trainer portal — assigned clients and full curriculum." },
+  { value: "STAFF", label: "Staff", description: "Staff panel access — view users and trainer requests." },
+  { value: "ADMIN", label: "Administrator", description: "Full admin access — manage users, access, credits, and settings." }
+];
+
+const accessOptions: { value: AccessLevel; label: string; description: string }[] = [
+  { value: "FREE", label: "Free", description: "Free preview lessons only." },
+  { value: "SINGLE_LESSON", label: "Single lesson", description: "Purchased individual lessons only." },
+  { value: "MONTHLY", label: "Monthly membership", description: "Full access to all current lessons." },
+  { value: "LIFETIME", label: "Lifetime access", description: "Permanent access to all current and future lessons." }
+];
+
+function roleBadgeClass(role: Role) {
+  switch (role) {
+    case "ADMIN":
+      return "bg-orange/10 text-orange";
+    case "STAFF":
+      return "bg-sky/10 text-sky";
+    case "TRAINER":
+      return "bg-success/10 text-success";
+    default:
+      return "bg-gray-100 text-muted";
+  }
+}
 
 function Badge({ status }: { status: DiagnosticStatus | string }) {
   const styles: Record<string, string> = {
@@ -84,6 +112,8 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   const [adminNotifications, setAdminNotifications] = useState<AdminNotificationRow[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [editRole, setEditRole] = useState<Role>("USER");
+  const [editAccessLevel, setEditAccessLevel] = useState<AccessLevel>("FREE");
 
   const selected = users.find((u) => u.id === selectedId);
 
@@ -106,6 +136,13 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   useEffect(() => {
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (selected) {
+      setEditRole(selected.role);
+      setEditAccessLevel(selected.accessLevel);
+    }
+  }, [selected?.id, selected?.role, selected?.accessLevel]);
 
   useEffect(() => {
     if (tab === "diagnostics" && isAdmin) {
@@ -198,9 +235,9 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     setMessage(data.message || "Assignment updated.");
   }
 
-  async function saveUser(fields: Record<string, unknown>) {
+  async function saveUser(fields: Record<string, unknown>, confirmMessage = "Save changes to this user?") {
     if (!selected || !isAdmin) return;
-    if (!confirm("Save changes to this user?")) return;
+    if (!confirm(confirmMessage)) return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -218,6 +255,35 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     setUsers((list) => list.map((u) => (u.id === data.user.id ? { ...u, ...data.user } : u)));
     setMessage("User updated.");
     await loadUsers();
+  }
+
+  async function saveUserAccess() {
+    if (!selected || !isAdmin) return;
+
+    const roleChanged = editRole !== selected.role;
+    const accessChanged = editAccessLevel !== selected.accessLevel;
+
+    if (!roleChanged && !accessChanged) {
+      setError("No changes to save.");
+      return;
+    }
+
+    if (selected.id === user.id && roleChanged && editRole !== "ADMIN") {
+      setError("You cannot remove your own administrator access.");
+      return;
+    }
+
+    const parts: string[] = [];
+    if (roleChanged) parts.push(`role to ${roleLabel(editRole)}`);
+    if (accessChanged) parts.push(`access to ${accessLabel(editAccessLevel)}`);
+
+    await saveUser(
+      {
+        ...(roleChanged ? { role: editRole } : {}),
+        ...(accessChanged ? { accessLevel: editAccessLevel } : {})
+      },
+      `Update ${selected.email}: change ${parts.join(" and ")}?`
+    );
   }
 
   async function grantCredits() {
@@ -301,8 +367,10 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
 
   async function resetUserAccess() {
     if (!selected || !isAdmin) return;
-    if (!confirm(`Reset access for ${selected.email}? This sets access to FREE and clears purchased lessons.`)) return;
-    await saveUser({ accessLevel: "FREE", purchasedLessonIds: [] });
+    await saveUser(
+      { accessLevel: "FREE", purchasedLessonIds: [] },
+      `Reset access for ${selected.email}? This sets access to FREE and clears purchased lessons.`
+    );
   }
 
   const purchasedIds = selected ? parseJsonArray(selected.purchasedLessonIds) : [];
@@ -321,7 +389,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
             <button
               key={t}
               onClick={() => setTab(t)}
-              disabled={!isAdmin && (t === "credits" || t === "diagnostics" || t === "access" || t === "logs")}
+              disabled={!isAdmin && (t === "credits" || t === "diagnostics" || t === "logs")}
               className={`rounded-full px-4 py-2 text-sm font-bold capitalize ${tab === t ? "bg-orange text-white" : "bg-white border border-gray-200 text-charcoal disabled:opacity-40"}`}
             >
               {t}
@@ -386,7 +454,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
           </div>
         )}
 
-        {(tab === "users" || tab === "access" || tab === "credits") && (
+        {(tab === "users" || tab === "credits") && (
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
             <div className="rounded-3xl bg-white p-6 shadow-sm">
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." className="w-full rounded-xl border border-gray-200 px-4 py-3" />
@@ -396,8 +464,16 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                 ) : filtered.length ? (
                   filtered.map((u) => (
                     <button key={u.id} onClick={() => setSelectedId(u.id)} className={`w-full py-3 text-left ${selectedId === u.id ? "text-orange" : "text-charcoal"}`}>
-                      <p className="font-bold">{u.name || u.email}</p>
-                      <p className="text-sm text-muted">{u.email}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold truncate">{u.name || u.email}</p>
+                          <p className="text-sm text-muted truncate">{u.email}</p>
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${roleBadgeClass(u.role)}`}>
+                          {u.role}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted">{accessLabel(u.accessLevel)}</p>
                     </button>
                   ))
                 ) : (
@@ -408,76 +484,129 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
 
             {selected && (
               <div className="rounded-3xl bg-white p-6 shadow-sm space-y-4">
-                <h2 className="text-xl font-black">{tab === "access" ? "Access Details" : tab === "credits" ? "Credit Management" : "User Details"}</h2>
+                <h2 className="text-xl font-black">{tab === "credits" ? "Credit Management" : "User Details"}</h2>
                 <p className="text-sm text-muted">{selected.email}</p>
-                <p className="text-sm"><strong>Role:</strong> {selected.role}</p>
-                <p className="text-sm"><strong>Access:</strong> {accessLabel(selected.accessLevel)}</p>
-                <p className="text-sm"><strong>Credits:</strong> {selected.creditBalance}</p>
 
-                {(tab === "access" || tab === "users") && (
+                {tab === "users" && (
                   <>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${roleBadgeClass(selected.role)}`}>
+                        {roleLabel(selected.role)}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-charcoal">
+                        {accessLabel(selected.accessLevel)}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-charcoal">
+                        {selected.creditBalance} credits
+                      </span>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="rounded-2xl border border-orange/20 bg-orange/5 p-5 space-y-4">
+                        <div>
+                          <h3 className="text-sm font-black uppercase tracking-wide text-charcoal">User access &amp; role</h3>
+                          <p className="mt-1 text-xs text-muted">
+                            Change account type (standard user, trainer, staff, admin) and lesson access level.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label htmlFor="editRole" className="text-sm font-bold text-charcoal">
+                            Account role
+                          </label>
+                          <select
+                            id="editRole"
+                            value={editRole}
+                            onChange={(e) => setEditRole(e.target.value as Role)}
+                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm"
+                          >
+                            {roleOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-1.5 text-xs text-muted">
+                            {roleOptions.find((o) => o.value === editRole)?.description}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label htmlFor="editAccessLevel" className="text-sm font-bold text-charcoal">
+                            Lesson access
+                          </label>
+                          <select
+                            id="editAccessLevel"
+                            value={editAccessLevel}
+                            onChange={(e) => setEditAccessLevel(e.target.value as AccessLevel)}
+                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm"
+                          >
+                            {accessOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-1.5 text-xs text-muted">
+                            {accessOptions.find((o) => o.value === editAccessLevel)?.description}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={saveUserAccess}
+                            className="rounded-full bg-orange px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+                          >
+                            Save access changes
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={resetUserAccess}
+                            className="rounded-full border border-red-200 px-5 py-2.5 text-sm font-bold text-red-600 disabled:opacity-60"
+                          >
+                            Reset to free
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isAdmin && (
+                      <p className="text-sm text-muted">Staff can view users. Only administrators can change roles and access.</p>
+                    )}
+
                     <div>
                       <p className="text-sm font-bold">Purchased lessons ({purchasedIds.length})</p>
                       <ul className="mt-1 max-h-24 overflow-auto text-xs text-muted">
-                        {purchasedIds.map((id) => <li key={id}>{getLesson(id)?.title || id}</li>)}
+                        {purchasedIds.map((id) => (
+                          <li key={id}>{getLesson(id)?.title || id}</li>
+                        ))}
                       </ul>
                     </div>
                     <div>
                       <p className="text-sm font-bold">Completed ({completedIds.length})</p>
                       <ul className="mt-1 max-h-24 overflow-auto text-xs text-muted">
-                        {completedIds.slice(0, 8).map((id) => <li key={id}>{getLesson(id)?.title || id}</li>)}
+                        {completedIds.slice(0, 8).map((id) => (
+                          <li key={id}>{getLesson(id)?.title || id}</li>
+                        ))}
                       </ul>
                     </div>
                     <div>
                       <p className="text-sm font-bold">Favorites ({favoriteIds.length})</p>
                       <ul className="mt-1 max-h-24 overflow-auto text-xs text-muted">
-                        {favoriteIds.slice(0, 8).map((id) => <li key={id}>{getLesson(id)?.title || id}</li>)}
+                        {favoriteIds.slice(0, 8).map((id) => (
+                          <li key={id}>{getLesson(id)?.title || id}</li>
+                        ))}
                       </ul>
                     </div>
                   </>
                 )}
 
-                {isAdmin && tab === "users" && (
+                {tab === "credits" && isAdmin && (
                   <>
-                    <select id="role" defaultValue={selected.role} className="w-full rounded-xl border border-gray-200 px-4 py-3">
-                      <option value="USER">USER</option>
-                      <option value="TRAINER">TRAINER</option>
-                      <option value="STAFF">STAFF</option>
-                      <option value="ADMIN">ADMIN</option>
-                    </select>
-                    <button
-                      disabled={busy}
-                      onClick={() => saveUser({ role: (document.getElementById("role") as HTMLSelectElement).value })}
-                      className="rounded-full bg-charcoal px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-                    >
-                      Save Role
-                    </button>
-                  </>
-                )}
-
-                {isAdmin && tab === "access" && (
-                  <>
-                    <select id="accessLevel" defaultValue={selected.accessLevel} className="w-full rounded-xl border border-gray-200 px-4 py-3">
-                      <option value="FREE">FREE</option>
-                      <option value="SINGLE_LESSON">SINGLE_LESSON</option>
-                      <option value="MONTHLY">MONTHLY</option>
-                      <option value="LIFETIME">LIFETIME</option>
-                    </select>
-                    <button
-                      disabled={busy}
-                      onClick={() => saveUser({ accessLevel: (document.getElementById("accessLevel") as HTMLSelectElement).value })}
-                      className="rounded-full bg-charcoal px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-                    >
-                      Save Access Level
-                    </button>
-                    <button disabled={busy} onClick={resetUserAccess} className="rounded-full border border-red-200 px-5 py-2.5 text-sm font-bold text-red-600 disabled:opacity-60">
-                      Reset User Access
-                    </button>
-                  </>
-                )}
-
-                {isAdmin && tab === "credits" && (
-                  <>
+                    <p className="text-sm"><strong>Credits:</strong> {selected.creditBalance}</p>
                     <input id="grantAmount" type="number" min={1} defaultValue={1} className="w-full rounded-xl border border-gray-200 px-4 py-3" />
                     <button disabled={busy} onClick={grantCredits} className="rounded-full bg-orange px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">Grant Credits</button>
                     <input id="creditBalance" type="number" min={0} defaultValue={selected.creditBalance} className="w-full rounded-xl border border-gray-200 px-4 py-3" />

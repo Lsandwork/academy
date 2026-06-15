@@ -42,7 +42,33 @@ export function trackProgress(user: SafeUser, lessonIds: string[]) {
 }
 
 export function accessLabel(level: AccessLevel) {
-  return level.replace("_", " ").toLowerCase();
+  switch (level) {
+    case AccessLevel.FREE:
+      return "Free";
+    case AccessLevel.SINGLE_LESSON:
+      return "Single lesson";
+    case AccessLevel.MONTHLY:
+      return "Monthly membership";
+    case AccessLevel.LIFETIME:
+      return "Lifetime access";
+    default:
+      return String(level).replace("_", " ").toLowerCase();
+  }
+}
+
+export function roleLabel(role: Role) {
+  switch (role) {
+    case Role.USER:
+      return "Standard user";
+    case Role.ADMIN:
+      return "Administrator";
+    case Role.STAFF:
+      return "Staff";
+    case Role.TRAINER:
+      return "Trainer";
+    default:
+      return role;
+  }
 }
 
 export function toSafeUser(user: User): SafeUser {

@@ -76,7 +76,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (error instanceof Error && error.message === "NO_FIELDS") {
       return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
     }
-    await logError({ severity: "warning", area: "Admin Users", message: String(error) });
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const message = error instanceof Error ? error.message : "Update failed.";
+    await logError({ severity: "warning", area: "Admin Users", message });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
