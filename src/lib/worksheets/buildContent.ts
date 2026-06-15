@@ -562,6 +562,209 @@ function reviewOnlyPage(lesson: AcademyLesson, category: TrackCategory): Workshe
   return reviewPage(lesson, category);
 }
 
+function keySkillsForLesson(lesson: AcademyLesson, category: TrackCategory): string[] | undefined {
+  if (category !== "enrichment") return undefined;
+  const map: Record<string, string[]> = {
+    "enrichment-101": ["Sniff", "Chew", "Puzzle", "Train"],
+    "fitness-and-body-awareness": ["Balance", "Surfaces", "Warm-up", "Confidence"],
+    "better-walks-through-sniffing": ["Sniff breaks", "Decompression", "Loose leash", "Planning"]
+  };
+  return map[lesson.id];
+}
+
+function homeworkForLesson(lesson: AcademyLesson, category: TrackCategory): string {
+  if (lesson.homework) return lesson.homework;
+  const map: Record<string, string> = {
+    "enrichment-101":
+      "Offer one sniff, chew, puzzle, and training game this week. Note which kept your dog engaged longest.",
+    "fitness-and-body-awareness":
+      "Practice warm-up, one balance skill, and cool-down three times this week. Stop if you see pain or fear.",
+    "better-walks-through-sniffing":
+      "Take one structured walk and one decompression walk. Compare your dog's energy and calm afterward."
+  };
+  if (map[lesson.id]) return map[lesson.id];
+  return `Practice one skill from "${lesson.title}" three times this week. Note what to simplify.`;
+}
+
+function reflectionForLesson(lesson: AcademyLesson, category: TrackCategory): string[] {
+  if (category === "enrichment") {
+    const map: Record<string, string[]> = {
+      "enrichment-101": [
+        "Which enrichment type did my dog love most?",
+        "When did enrichment help prevent unwanted behavior?",
+        "What will I add to tomorrow's routine?"
+      ],
+      "fitness-and-body-awareness": [
+        "Where did my dog show confidence?",
+        "Where did they hesitate — and what made it easier?",
+        "Questions for my Fitdog trainer:"
+      ],
+      "better-walks-through-sniffing": [
+        "Which walk type left my dog more settled?",
+        "Where can I add more sniff time on our route?",
+        "Questions for my Fitdog trainer:"
+      ]
+    };
+    if (map[lesson.id]) return map[lesson.id];
+  }
+  return ["What went well?", "When did my dog struggle?", "Questions for my Fitdog trainer:"];
+}
+
+function enrichmentCoverPage(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent {
+  const page = coverPage(lesson, track, "enrichment");
+  page.keySkills = keySkillsForLesson(lesson, "enrichment");
+  return page;
+}
+
+function enrichmentReviewPage(lesson: AcademyLesson): WorksheetPageContent {
+  const page = reviewPage(lesson, "enrichment");
+  const section = page.sections.find((s) => s.sectionNumber === 6);
+  if (section) {
+    section.homework = homeworkForLesson(lesson, "enrichment");
+    section.reflectionPrompts = reflectionForLesson(lesson, "enrichment");
+  }
+  return page;
+}
+
+function enrichment101Pages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
+  return [
+    enrichmentCoverPage(lesson, track),
+    {
+      worksheetLabel: "STARTER PLAN · TRACK",
+      sections: [
+        {
+          callout: {
+            title: "Why this matters",
+            body: "Dogs need outlets for sniffing, chewing, and problem-solving every day — not only when behavior breaks down.",
+            variant: "peach"
+          },
+          sectionNumber: 3,
+          sectionTitle: "Step-by-step practice plan",
+          steps: practiceSteps(lesson, "enrichment")
+        },
+        {
+          sectionNumber: 4,
+          sectionTitle: "Build your enrichment menu",
+          gridCards: [
+            { title: "Sniff", prompt: "Snuffle mat, scatter feed, or find-it game", accent: "sky" },
+            { title: "Chew", prompt: "Frozen Kong, safe chew, or cardboard shred box", accent: "orange" },
+            { title: "Puzzle", prompt: "Food puzzle, muffin tin, or towel wrap", accent: "sky" },
+            { title: "Train", prompt: "3-minute trick or manners session", accent: "orange" }
+          ]
+        },
+        {
+          sectionNumber: 5,
+          sectionTitle: "5-day rotation starter",
+          dayCards: [
+            { day: "D1", title: "Sniff focus", body: "Scatter feed breakfast.", accent: "sky" },
+            { day: "D2", title: "Chew focus", body: "Frozen Kong at calm time.", accent: "orange" },
+            { day: "D3", title: "Puzzle focus", body: "Easy food puzzle.", accent: "sky" },
+            { day: "D4", title: "Train focus", body: "3-min trick session.", accent: "orange" },
+            { day: "D5", title: "Mix & review", body: "Repeat best from the week.", accent: "sky" }
+          ],
+          table: { headers: trackerHeaders("enrichment", lesson), rows: trackerRows("enrichment", lesson) }
+        }
+      ]
+    },
+    enrichmentReviewPage(lesson)
+  ];
+}
+
+function fitnessEnrichmentPages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
+  return [
+    enrichmentCoverPage(lesson, track),
+    {
+      worksheetLabel: "FITNESS · TRACK",
+      sections: [
+        {
+          callout: {
+            title: "Safety first",
+            body: "Fitness builds confidence — not exhaustion. Stop for pain, limping, or fear.",
+            variant: "peach"
+          },
+          sectionNumber: 3,
+          sectionTitle: "Step-by-step practice plan",
+          steps: practiceSteps(lesson, "enrichment")
+        },
+        {
+          sectionNumber: 4,
+          sectionTitle: "Session building blocks",
+          gridCards: [
+            { title: "Warm-up", prompt: "30 sec gentle movement indoors", accent: "sky" },
+            { title: "Balance", prompt: "Front paws on low platform — 3 sec", accent: "orange" },
+            { title: "Surfaces", prompt: "Non-slip mat or new texture", accent: "sky" },
+            { title: "Cool-down", prompt: "Calm sniff or chew — 2 min", accent: "orange" }
+          ]
+        },
+        {
+          sectionNumber: 5,
+          sectionTitle: "Weekly fitness log",
+          table: { headers: trackerHeaders("enrichment", lesson), rows: trackerRows("enrichment", lesson) },
+          bodyLanguageScale: [
+            { score: 1, label: "Hesitant", color: "#FFB020" },
+            { score: 3, label: "Comfortable", color: "#2E9E5B" },
+            { score: 5, label: "Confident", color: "#2E9E5B" }
+          ]
+        }
+      ]
+    },
+    enrichmentReviewPage(lesson)
+  ];
+}
+
+function sniffingWalkPages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
+  return [
+    enrichmentCoverPage(lesson, track),
+    {
+      worksheetLabel: "WALK PLAN · TRACK",
+      sections: [
+        {
+          callout: {
+            title: "Walk types",
+            body: "Structured walks teach manners. Decompression walks let sniffing be the point.",
+            variant: "sky"
+          },
+          sectionNumber: 3,
+          sectionTitle: "Step-by-step practice plan",
+          steps: practiceSteps(lesson, "enrichment")
+        },
+        {
+          sectionNumber: 4,
+          sectionTitle: "Compare your walk types",
+          table: {
+            headers: ["Walk type", "Goal", "Leash", "Sniff time"],
+            rows: [
+              ["Structured", "Manners + training", "Loose with guidance", "Reward breaks only"],
+              ["Decompression", "Calm + fulfillment", "Fully loose", "Most of the walk"],
+              ["This week", "", "", ""]
+            ]
+          }
+        },
+        {
+          sectionNumber: 5,
+          sectionTitle: "5-day walk plan",
+          dayCards: [
+            { day: "D1", title: "Decompression", body: "Sniff-first route.", accent: "sky" },
+            { day: "D2", title: "Structured", body: "Loose leash + cues.", accent: "orange" },
+            { day: "D3", title: "Decompression", body: "New sniff spot.", accent: "sky" },
+            { day: "D4", title: "Mix", body: "Train then sniff break.", accent: "orange" },
+            { day: "D5", title: "Review", body: "Which walk calmed most?", accent: "sky" }
+          ],
+          table: { headers: trackerHeaders("enrichment", lesson), rows: trackerRows("enrichment", lesson) }
+        }
+      ]
+    },
+    enrichmentReviewPage(lesson)
+  ];
+}
+
+function enrichmentPages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
+  if (lesson.id === "enrichment-101") return enrichment101Pages(lesson, track);
+  if (lesson.id === "fitness-and-body-awareness") return fitnessEnrichmentPages(lesson, track);
+  if (lesson.id === "better-walks-through-sniffing") return sniffingWalkPages(lesson, track);
+  return [enrichmentCoverPage(lesson, track), practicePage(lesson, "enrichment"), enrichmentReviewPage(lesson)];
+}
+
 function separationDurationPages(lesson: AcademyLesson, track: AcademyTrack): WorksheetPageContent[] {
   return [
     coverPage(lesson, track, "separation"),
@@ -602,6 +805,7 @@ export function buildWorksheetContent(lesson: AcademyLesson, track: AcademyTrack
   let pages: WorksheetPageContent[];
   if (lesson.id === "alone-time-assessment") pages = separationAssessmentPages(lesson, track);
   else if (lesson.id === "building-alone-time-duration") pages = separationDurationPages(lesson, track);
+  else if (category === "enrichment") pages = enrichmentPages(lesson, track);
   else pages = [coverPage(lesson, track, category), practicePage(lesson, category), reviewPage(lesson, category)];
 
   return {
