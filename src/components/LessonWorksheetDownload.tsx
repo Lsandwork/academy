@@ -1,0 +1,83 @@
+"use client";
+
+import { useState } from "react";
+import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
+
+export function LessonWorksheetDownload({
+  lessonId,
+  lessonTitle,
+  worksheetTitle,
+  unlocked
+}: {
+  lessonId: string;
+  lessonTitle: string;
+  worksheetTitle: string;
+  unlocked: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function download() {
+    if (!unlocked || busy) return;
+    setBusy(true);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/lessons/${lessonId}/worksheet`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Download failed.");
+      }
+
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match?.[1] || `fitdog-${lessonId}-worksheet.pdf`;
+
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not download worksheet.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-3xl border border-sky/20 bg-gradient-to-br from-white via-white to-sky/5 p-6 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black uppercase tracking-wide text-sky">Lesson Worksheet</p>
+          <h2 className="mt-1 text-xl font-black text-charcoal">{worksheetTitle}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Download your guided worksheet to practice <strong className="font-semibold text-charcoal">{lessonTitle}</strong> at
+            home, track progress, and help set your dog up for success.
+          </p>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={fitdogAcademyAssets.icons.benefits.videoLessons} alt="" width={40} height={40} className="hidden shrink-0 opacity-80 sm:block" />
+      </div>
+
+      <button
+        type="button"
+        disabled={!unlocked || busy}
+        onClick={download}
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+        </svg>
+        {busy ? "Preparing PDF…" : "Download Worksheet"}
+      </button>
+
+      {!unlocked && (
+        <p className="mt-3 text-xs font-semibold text-muted">Unlock this lesson to download the worksheet.</p>
+      )}
+      {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
+    </section>
+  );
+}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FitdogAiAssist } from "@/components/ai/FitdogAiAssist";
 import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
+import { LessonWorksheetDownload } from "@/components/LessonWorksheetDownload";
 import { AppHeader } from "@/components/AppHeader";
 import { LessonVideoPlayer } from "@/components/LessonVideoPlayer";
 import { AcademyLesson, AcademyTrack } from "@/data/academyCourses";
@@ -150,10 +151,12 @@ export default function LessonClient({
             <p className="mt-2 text-sm text-muted">{lesson.takeaway}</p>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-gray-100 p-4">
-            <h2 className="font-black">Worksheet</h2>
-            <p className="mt-1 text-sm text-muted">{lesson.worksheetTitle}</p>
-          </div>
+          <LessonWorksheetDownload
+            lessonId={lesson.id}
+            lessonTitle={lesson.title}
+            worksheetTitle={lesson.worksheetTitle}
+            unlocked={unlocked}
+          />
 
           <p className="mt-6 text-xs text-muted">
             This course is educational and does not replace veterinary care or individualized behavior support.

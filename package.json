@@ -11,10 +11,12 @@
     "db:seed": "tsx prisma/seed.ts",
     "provision": "node scripts/provision-production.mjs",
     "videos:checklist": "cat scripts/lesson-video-upload-checklist.txt",
+    "worksheets:verify": "tsx scripts/verify-worksheets.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "bcryptjs": "^3.0.2",
