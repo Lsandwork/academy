@@ -10,6 +10,8 @@ import { accessLabel, parseJsonArray } from "@/lib/user";
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.mustChangePassword) redirect("/change-password?required=1");
+  if (user.role === "TRAINER") redirect("/trainer");
 
   const completed = parseJsonArray(user.completedLessonIds).length;
 

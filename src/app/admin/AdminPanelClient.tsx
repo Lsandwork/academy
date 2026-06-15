@@ -18,9 +18,19 @@ type TrainerContractRow = {
   ownerMessage?: string | null;
   reportSummary?: string | null;
   trainerNotified: boolean;
+  adminNotified: boolean;
   createdAt: string;
   owner: { name?: string | null; email: string };
   trainer: { name: string; email: string; title: string };
+};
+
+type AdminNotificationRow = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  readAt?: string | null;
+  createdAt: string;
 };
 
 const tabs = ["overview", "users", "access", "credits", "trainers", "diagnostics", "logs"] as const;
@@ -47,6 +57,8 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   const [toolResult, setToolResult] = useState<string>("");
   const [errorLogs, setErrorLogs] = useState<ErrorRow[]>([]);
   const [trainerContracts, setTrainerContracts] = useState<TrainerContractRow[]>([]);
+  const [adminNotifications, setAdminNotifications] = useState<AdminNotificationRow[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const selected = users.find((u) => u.id === selectedId);
@@ -83,6 +95,18 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   }, [tab, isAdmin]);
 
   useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/admin/notifications")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.notifications) {
+          setAdminNotifications(data.notifications);
+          setUnreadNotifications(data.unreadCount || 0);
+        }
+      });
+  }, [isAdmin, tab, message]);
+
+  useEffect(() => {
     if (tab === "trainers" && isAdmin) {
       fetch("/api/admin/trainer-contracts")
         .then((r) => r.json())
@@ -96,6 +120,16 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     () => users.filter((u) => u.email.toLowerCase().includes(search.toLowerCase()) || (u.name || "").toLowerCase().includes(search.toLowerCase())),
     [users, search]
   );
+
+  async function markNotificationRead(id: string) {
+    await fetch("/api/admin/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+    setAdminNotifications((list) => list.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)));
+    setUnreadNotifications((c) => Math.max(0, c - 1));
+  }
 
   async function saveUser(fields: Record<string, unknown>) {
     if (!selected || !isAdmin) return;
@@ -231,11 +265,55 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
         {toolResult && tab === "diagnostics" && <p className="mt-4 rounded-xl bg-sky/10 px-4 py-3 text-sm font-semibold text-charcoal">{toolResult}</p>}
 
         {tab === "overview" && (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Users</p><p className="text-2xl font-black">{users.length}</p></div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Admins</p><p className="text-2xl font-black">{users.filter((u) => u.role === "ADMIN").length}</p></div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Paid users</p><p className="text-2xl font-black">{users.filter((u) => u.accessLevel !== "FREE").length}</p></div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Credits outstanding</p><p className="text-2xl font-black">{users.reduce((s, u) => s + u.creditBalance, 0)}</p></div>
+          <div className="mt-8 space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Users</p><p className="text-2xl font-black">{users.length}</p></div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Admins</p><p className="text-2xl font-black">{users.filter((u) => u.role === "ADMIN").length}</p></div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Paid users</p><p className="text-2xl font-black">{users.filter((u) => u.accessLevel !== "FREE").length}</p></div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Credits outstanding</p><p className="text-2xl font-black">{users.reduce((s, u) => s + u.creditBalance, 0)}</p></div>
+            </div>
+
+            {isAdmin && (
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-xl font-black">Trainer contact notifications</h2>
+                  {unreadNotifications > 0 && (
+                    <span className="rounded-full bg-orange/10 px-3 py-1 text-xs font-black text-orange">
+                      {unreadNotifications} unread
+                    </span>
+                  )}
+                </div>
+                {!adminNotifications.length ? (
+                  <p className="mt-4 text-sm text-muted">No trainer contact requests yet.</p>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {adminNotifications.slice(0, 8).map((n) => (
+                      <div
+                        key={n.id}
+                        className={`rounded-2xl border p-4 ${!n.readAt ? "border-orange/30 bg-orange/5" : "border-gray-100"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-bold">{n.title}</p>
+                            <p className="mt-2 whitespace-pre-line text-sm text-muted">{n.body}</p>
+                            <p className="mt-2 text-xs text-muted">{new Date(n.createdAt).toLocaleString()}</p>
+                          </div>
+                          {!n.readAt && (
+                            <button
+                              type="button"
+                              onClick={() => markNotificationRead(n.id)}
+                              className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-xs font-bold text-charcoal hover:border-orange/30"
+                            >
+                              Mark read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -288,6 +366,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                   <>
                     <select id="role" defaultValue={selected.role} className="w-full rounded-xl border border-gray-200 px-4 py-3">
                       <option value="USER">USER</option>
+                      <option value="TRAINER">TRAINER</option>
                       <option value="STAFF">STAFF</option>
                       <option value="ADMIN">ADMIN</option>
                     </select>
@@ -496,7 +575,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
         {tab === "trainers" && isAdmin && (
           <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-xl font-black">Trainer Contract Requests</h2>
-            <p className="mt-1 text-sm text-muted">Owner requests with assessment reports sent to certified trainers.</p>
+            <p className="mt-1 text-sm text-muted">Owner requests notify admin in-app. Trainer email sends when Resend is configured.</p>
             {!trainerContracts.length ? (
               <p className="mt-4 text-sm text-muted">No trainer requests yet.</p>
             ) : (
@@ -527,7 +606,8 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                         <td className="py-3 pr-4 text-xs text-muted">{c.reportSummary || "No report"}</td>
                         <td className="py-3">
                           <Badge status={c.status === "pending" ? "warning" : "healthy"} />
-                          {c.trainerNotified && <p className="mt-1 text-[10px] text-muted">Email sent</p>}
+                          {c.adminNotified && <p className="mt-1 text-[10px] text-muted">Admin notified</p>}
+                          {c.trainerNotified && <p className="mt-1 text-[10px] text-muted">Trainer email sent</p>}
                         </td>
                       </tr>
                     ))}

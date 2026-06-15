@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { buildAssessmentReport } from "@/lib/assessmentReport";
 import { prisma } from "@/lib/db";
+import { notifyAdminsOfTrainerContact } from "@/lib/adminNotifications";
 import { notifyTrainerOfContract } from "@/lib/trainerNotify";
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,14 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    const adminNotify = await notifyAdminsOfTrainerContact({
+      contractId: contract.id,
+      owner: user,
+      trainer: { name: trainer.name },
+      ownerMessage,
+      reportSummary
+    });
+
     const notify = await notifyTrainerOfContract({
       trainer: { name: trainer.name, email: trainer.email },
       owner: user,
@@ -62,10 +71,14 @@ export async function POST(req: NextRequest) {
       contractId: contract.id
     });
 
-    if (notify.sent) {
+    const updateData: { adminNotified?: boolean; trainerNotified?: boolean } = {};
+    if (adminNotify.sent) updateData.adminNotified = true;
+    if (notify.sent) updateData.trainerNotified = true;
+
+    if (Object.keys(updateData).length) {
       await prisma.trainerContract.update({
         where: { id: contract.id },
-        data: { trainerNotified: true }
+        data: updateData
       });
     }
 
@@ -75,6 +88,7 @@ export async function POST(req: NextRequest) {
       trainerName: trainer.name,
       reportAttached: Boolean(report),
       reportSummary,
+      adminNotified: adminNotify.sent,
       emailSent: notify.sent
     });
   } catch (error) {

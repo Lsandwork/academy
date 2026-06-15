@@ -16,12 +16,22 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const staffOnly = Boolean(body.staffOnly);
+    const trainerOnly = Boolean(body.trainerOnly);
 
     const profile = await ensureProfileForAuthUser(user);
 
     if (staffOnly && profile.role === "USER") {
       await signOutCurrentUser();
       return NextResponse.json({ error: "Staff access only." }, { status: 403 });
+    }
+
+    if (trainerOnly && profile.role !== "TRAINER" && profile.role !== "ADMIN") {
+      await signOutCurrentUser();
+      return NextResponse.json({ error: "Trainer access only." }, { status: 403 });
+    }
+
+    if (profile.mustChangePassword) {
+      return NextResponse.json({ ok: true, redirect: "/change-password?required=1", mustChangePassword: true });
     }
 
     return NextResponse.json({ ok: true, redirect: redirectForRole(profile.role) });

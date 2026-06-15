@@ -13,6 +13,7 @@ enum Role {
   USER
   STAFF
   ADMIN
+  TRAINER
 
   @@schema("academy")
 }
@@ -34,6 +35,7 @@ model User {
   name               String?
   avatarUrl          String?
   role               Role                @default(USER)
+  mustChangePassword Boolean             @default(false)
   accessLevel        AccessLevel         @default(FREE)
   creditBalance      Int                 @default(0)
   purchasedLessonIds String              @default("[]")
@@ -46,6 +48,8 @@ model User {
   updatedAt          DateTime            @updatedAt
   creditTransactions CreditTransaction[]
   trainerContracts   TrainerContract[]
+  adminNotifications AdminNotification[]
+  trainerProfile     CertifiedTrainer?
 
   @@schema("academy")
 }
@@ -121,18 +125,26 @@ model AiHealthCheck {
 }
 
 model CertifiedTrainer {
-  id          String            @id @default(cuid())
-  slug        String            @unique
-  name        String
-  email       String
-  title       String
-  bio         String
-  specialties String            @default("[]")
-  photoUrl    String?
-  active      Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  contracts   TrainerContract[]
+  id             String            @id @default(cuid())
+  slug           String            @unique
+  name           String
+  email          String
+  title          String
+  bio            String
+  about          String?
+  philosophy     String?
+  quote          String?
+  quoteAuthor    String?
+  specialties    String            @default("[]")
+  classes        String            @default("[]")
+  qualifications String            @default("[]")
+  photoUrl       String?
+  userId         String?           @unique
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  contracts      TrainerContract[]
 
   @@schema("academy")
 }
@@ -148,10 +160,27 @@ model TrainerContract {
   assessmentReport String?
   reportSummary    String?
   trainerNotified  Boolean          @default(false)
+  adminNotified    Boolean          @default(false)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
   @@index([ownerId])
   @@index([trainerId])
+  @@schema("academy")
+}
+
+model AdminNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  metadata  String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([createdAt])
   @@schema("academy")
 }

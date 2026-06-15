@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { SafeUser, toSafeUser } from "./user";
@@ -85,9 +86,39 @@ export async function requireStaff() {
   return user;
 }
 
+export async function requireTrainer() {
+  const user = await requireFreshPassword();
+  if (user.role !== "TRAINER" && user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  return user;
+}
+
+/** For API routes — returns 403 instead of redirecting when password change is required. */
+export async function requireTrainerApi() {
+  const user = await requireUser();
+  if (user.mustChangePassword) throw new Error("PASSWORD_CHANGE_REQUIRED");
+  if (user.role !== "TRAINER" && user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  return user;
+}
+
 export async function requireAdmin() {
   const user = await requireUser();
   if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  return user;
+}
+
+/** Redirect users who must change a temporary password before using the app. */
+export async function requireFreshPassword(): Promise<SafeUser> {
+  const user = await requireUser();
+  if (user.mustChangePassword) {
+    redirect("/change-password?required=1");
+  }
+  return user;
+}
+
+export async function requireUserOrRedirect(loginPath = "/login"): Promise<SafeUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect(loginPath);
+  if (user.mustChangePassword) redirect("/change-password?required=1");
   return user;
 }
 
@@ -97,5 +128,7 @@ export async function signOutCurrentUser() {
 }
 
 export function redirectForRole(role: SafeUser["role"]) {
-  return role === "ADMIN" || role === "STAFF" ? "/admin" : "/dashboard";
+  if (role === "ADMIN" || role === "STAFF") return "/admin";
+  if (role === "TRAINER") return "/trainer";
+  return "/dashboard";
 }

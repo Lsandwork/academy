@@ -39,7 +39,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) 
 export async function signInWithEmail(
   email: string,
   password: string,
-  options?: { staffOnly?: boolean }
+  options?: { staffOnly?: boolean; trainerOnly?: boolean }
 ) {
   if (!isSupabaseConfigured()) {
     throw new LoginError("Auth is not configured. Missing Supabase environment variables.");
@@ -66,7 +66,10 @@ export async function signInWithEmail(
     fetch("/api/auth/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ staffOnly: Boolean(options?.staffOnly) })
+      body: JSON.stringify({
+        staffOnly: Boolean(options?.staffOnly),
+        trainerOnly: Boolean(options?.trainerOnly)
+      })
     }),
     LOGIN_TIMEOUT_MS,
     "Login timed out while loading your account profile."

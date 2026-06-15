@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SafeUser } from "@/lib/user";
+import { AdminNotificationBell } from "./AdminNotificationBell";
 import { Logo } from "./Logo";
 
 const navLinks = [
@@ -24,8 +25,12 @@ export function AppHeader({ user }: { user: SafeUser }) {
           {(user.role === "STAFF" || user.role === "ADMIN") && (
             <Link href="/admin" className="hover:text-orange">Admin</Link>
           )}
+          {user.role === "TRAINER" && (
+            <Link href="/trainer" className="hover:text-orange">Trainer Portal</Link>
+          )}
         </nav>
         <div className="flex items-center gap-3">
+          {user.role === "ADMIN" && <AdminNotificationBell />}
           <Link href="/profile" className="flex items-center gap-2 text-sm font-semibold">
             {user.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -50,6 +55,9 @@ export function AppHeader({ user }: { user: SafeUser }) {
         ))}
         {(user.role === "STAFF" || user.role === "ADMIN") && (
           <Link href="/admin" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Admin</Link>
+        )}
+        {user.role === "TRAINER" && (
+          <Link href="/trainer" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Trainer</Link>
         )}
       </nav>
     </header>

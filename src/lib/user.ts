@@ -15,6 +15,14 @@ export function isAdmin(user: Pick<SafeUser, "role">) {
   return user.role === Role.ADMIN;
 }
 
+export function isTrainer(user: Pick<SafeUser, "role">) {
+  return user.role === Role.TRAINER;
+}
+
+export function isStaffOrAdmin(user: Pick<SafeUser, "role">) {
+  return user.role === Role.STAFF || user.role === Role.ADMIN;
+}
+
 export function hasFullPaidAccess(user: Pick<SafeUser, "role" | "accessLevel">) {
   if (isAdmin(user)) return true;
   return user.accessLevel === AccessLevel.MONTHLY || user.accessLevel === AccessLevel.LIFETIME;

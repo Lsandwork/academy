@@ -2,16 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { buildAssessmentReport } from "@/lib/assessmentReport";
 import { prisma } from "@/lib/db";
+import { toTrainerProfile } from "@/lib/trainerProfile";
 import TrainersClient from "./TrainersClient";
-
-function safeJsonArray(raw: string) {
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : [];
-  } catch {
-    return [];
-  }
-}
 
 export default async function TrainersPage() {
   const user = await getCurrentUser();
@@ -33,15 +25,7 @@ export default async function TrainersPage() {
   return (
     <TrainersClient
       user={user}
-      trainers={trainers.map((t) => ({
-        id: t.id,
-        slug: t.slug,
-        name: t.name,
-        title: t.title,
-        bio: t.bio,
-        specialties: safeJsonArray(t.specialties),
-        photoUrl: t.photoUrl
-      }))}
+      trainers={trainers.map(toTrainerProfile)}
       assessmentReport={assessmentReport}
       pendingTrainerIds={pendingTrainerIds}
     />
