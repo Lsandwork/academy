@@ -1,0 +1,7 @@
+.git
+.next/cache
+exports
+docs/assets-source
+*.zip
+fitdog_academy_assets.zip
+scripts/generate-*.ts
