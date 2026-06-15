@@ -148,6 +148,10 @@ export default function TrainersClient({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [dogName, setDogName] = useState("");
+  const [dogBreed, setDogBreed] = useState("");
+  const [dogAge, setDogAge] = useState("");
+  const [dogNotes, setDogNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ trainerName: string; reportAttached: boolean } | null>(null);
@@ -162,7 +166,14 @@ export default function TrainersClient({
     const res = await fetch("/api/trainers/contract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ trainerId: selectedId, message })
+      body: JSON.stringify({
+        trainerId: selectedId,
+        message,
+        dogName,
+        dogBreed,
+        dogAge,
+        dogNotes
+      })
     });
 
     const data = await res.json();
@@ -176,6 +187,10 @@ export default function TrainersClient({
     setSuccess({ trainerName: data.trainerName, reportAttached: data.reportAttached });
     setSelectedId(null);
     setMessage("");
+    setDogName("");
+    setDogBreed("");
+    setDogAge("");
+    setDogNotes("");
   }
 
   if (success) {
@@ -251,15 +266,42 @@ export default function TrainersClient({
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
             <h3 className="text-xl font-black">Request {selected.name}</h3>
             <p className="mt-2 text-sm text-muted">
-              Describe your dog&apos;s situation. Your assessment report
-              {assessmentReport ? " will be sent automatically." : " is not on file yet — complete the assessment for best results."}
+              Tell us about your dog. Admin will review and approve the assignment before your trainer can message you.
+              {assessmentReport ? " Your assessment report will be sent automatically." : " Complete the assessment for best results."}
             </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <input
+                value={dogName}
+                onChange={(e) => setDogName(e.target.value)}
+                placeholder="Dog's name *"
+                className="rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
+              />
+              <input
+                value={dogBreed}
+                onChange={(e) => setDogBreed(e.target.value)}
+                placeholder="Breed"
+                className="rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
+              />
+              <input
+                value={dogAge}
+                onChange={(e) => setDogAge(e.target.value)}
+                placeholder="Age"
+                className="rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
+              />
+            </div>
+            <textarea
+              value={dogNotes}
+              onChange={(e) => setDogNotes(e.target.value)}
+              rows={2}
+              placeholder="Anything else about your dog (behavior, medical notes, etc.)"
+              className="mt-3 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
+            />
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              placeholder="Tell us about your dog, goals, and any urgent concerns…"
-              className="mt-4 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
+              rows={3}
+              placeholder="What would you like help with?"
+              className="mt-3 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange/40"
             />
             {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
             <div className="mt-5 flex gap-3">
@@ -268,6 +310,10 @@ export default function TrainersClient({
                 onClick={() => {
                   setSelectedId(null);
                   setMessage("");
+                  setDogName("");
+                  setDogBreed("");
+                  setDogAge("");
+                  setDogNotes("");
                   setError("");
                 }}
                 className="flex-1 rounded-full border border-gray-200 py-3 text-sm font-bold text-charcoal"
@@ -276,7 +322,7 @@ export default function TrainersClient({
               </button>
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || !dogName.trim()}
                 onClick={submitContract}
                 className="flex-1 rounded-full bg-orange py-3 text-sm font-bold text-white disabled:opacity-60"
               >

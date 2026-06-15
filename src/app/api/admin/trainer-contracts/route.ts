@@ -11,7 +11,7 @@ export async function GET() {
       take: 100,
       include: {
         owner: { select: { id: true, name: true, email: true } },
-        trainer: { select: { id: true, name: true, email: true, title: true } }
+        trainer: { select: { id: true, name: true, email: true, title: true, userId: true } }
       }
     });
 

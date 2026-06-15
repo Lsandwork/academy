@@ -32,7 +32,10 @@ function hasOwnerData(profile: {
   return profile.creditBalance > 0;
 }
 
-async function findAuthUserByEmail(supabase: ReturnType<typeof createClient>, email: string) {
+async function findAuthUserByEmail(
+  supabase: ReturnType<typeof createClient<any, "public", "public">>,
+  email: string
+) {
   const normalizedEmail = email.toLowerCase().trim();
   let page = 1;
   const perPage = 200;
@@ -50,7 +53,7 @@ async function findAuthUserByEmail(supabase: ReturnType<typeof createClient>, em
 }
 
 export async function ensureTrainerAuthUser(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any, "public", "public">>,
   account: TrainerAccountSeed,
   options?: { resetPassword?: boolean }
 ) {

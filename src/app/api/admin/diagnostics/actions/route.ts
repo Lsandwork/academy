@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
           supabaseId: null,
           email: "test@test.com",
           role: "USER" as const,
+          mustChangePassword: false,
           accessLevel: "FREE" as const,
           creditBalance: 0,
           purchasedLessonIds: "[]",

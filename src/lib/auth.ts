@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { findUserProfile, updateUserProfile } from "@/lib/authProfile";
 import { SafeUser, toSafeUser } from "./user";
 
 export type { SafeUser } from "./user";
@@ -14,12 +15,7 @@ export async function getSupabaseAuthUser() {
 }
 
 export async function findProfileForAuthUser(authUser: { id: string; email?: string }) {
-  const email = authUser.email?.toLowerCase().trim();
-  return prisma.user.findFirst({
-    where: {
-      OR: [{ supabaseId: authUser.id }, ...(email ? [{ email }] : [])]
-    }
-  });
+  return findUserProfile(authUser);
 }
 
 export async function ensureProfileForAuthUser(authUser: {
@@ -32,14 +28,11 @@ export async function ensureProfileForAuthUser(authUser: {
     throw new Error("Authenticated user is missing an email address.");
   }
 
-  let profile = await findProfileForAuthUser(authUser);
+  let profile = await findUserProfile(authUser);
 
   if (profile) {
     if (!profile.supabaseId) {
-      profile = await prisma.user.update({
-        where: { id: profile.id },
-        data: { supabaseId: authUser.id }
-      });
+      profile = await updateUserProfile(profile.id, { supabaseId: authUser.id });
     }
     return profile;
   }
@@ -56,7 +49,7 @@ export async function ensureProfileForAuthUser(authUser: {
       }
     });
   } catch {
-    profile = await findProfileForAuthUser(authUser);
+    profile = await findUserProfile(authUser);
     if (profile) return profile;
     throw new Error("Could not create your account profile.");
   }

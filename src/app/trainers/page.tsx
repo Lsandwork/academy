@@ -17,7 +17,7 @@ export default async function TrainersPage() {
   const assessmentReport = buildAssessmentReport(user);
 
   const pendingContracts = await prisma.trainerContract.findMany({
-    where: { ownerId: user.id, status: "pending" },
+    where: { ownerId: user.id, status: { in: ["pending_admin", "pending"] } },
     select: { trainerId: true }
   });
   const pendingTrainerIds = pendingContracts.map((c) => c.trainerId);

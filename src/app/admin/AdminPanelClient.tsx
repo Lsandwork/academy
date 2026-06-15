@@ -15,13 +15,16 @@ type ErrorRow = { id: string; severity: string; area: string; message: string; u
 type TrainerContractRow = {
   id: string;
   status: string;
+  dogName?: string | null;
+  dogBreed?: string | null;
+  dogAge?: string | null;
   ownerMessage?: string | null;
   reportSummary?: string | null;
   trainerNotified: boolean;
   adminNotified: boolean;
   createdAt: string;
-  owner: { name?: string | null; email: string };
-  trainer: { name: string; email: string; title: string };
+  owner: { id: string; name?: string | null; email: string };
+  trainer: { id: string; name: string; email: string; title: string };
 };
 
 type AdminNotificationRow = {
@@ -129,6 +132,29 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     });
     setAdminNotifications((list) => list.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)));
     setUnreadNotifications((c) => Math.max(0, c - 1));
+  }
+
+  async function reviewContract(contractId: string, action: "approve" | "decline") {
+    if (!isAdmin) return;
+    const label = action === "approve" ? "approve this trainer assignment" : "decline this request";
+    if (!confirm(`Are you sure you want to ${label}?`)) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch(`/api/admin/trainer-contracts/${contractId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action })
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      setError(data.error || "Could not update assignment.");
+      return;
+    }
+    setTrainerContracts((list) =>
+      list.map((c) => (c.id === contractId ? { ...c, status: data.contract.status } : c))
+    );
+    setMessage(data.message || "Assignment updated.");
   }
 
   async function saveUser(fields: Record<string, unknown>) {
@@ -574,8 +600,8 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
 
         {tab === "trainers" && isAdmin && (
           <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black">Trainer Contract Requests</h2>
-            <p className="mt-1 text-sm text-muted">Owner requests notify admin in-app. Trainer email sends when Resend is configured.</p>
+            <h2 className="text-xl font-black">Trainer Assignments</h2>
+            <p className="mt-1 text-sm text-muted">Review dog assignments and approve trainers before they can message clients.</p>
             {!trainerContracts.length ? (
               <p className="mt-4 text-sm text-muted">No trainer requests yet.</p>
             ) : (
@@ -584,16 +610,21 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                   <thead>
                     <tr className="border-b border-gray-100">
                       <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Dog</th>
                       <th className="py-2 pr-4">Owner</th>
                       <th className="py-2 pr-4">Trainer</th>
                       <th className="py-2 pr-4">Report</th>
-                      <th className="py-2">Status</th>
+                      <th className="py-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trainerContracts.map((c) => (
                       <tr key={c.id} className="border-b border-gray-50 align-top">
                         <td className="py-3 pr-4 text-muted">{new Date(c.createdAt).toLocaleString()}</td>
+                        <td className="py-3 pr-4">
+                          <p className="font-bold">{c.dogName || "—"}</p>
+                          <p className="text-xs text-muted">{[c.dogBreed, c.dogAge].filter(Boolean).join(" · ")}</p>
+                        </td>
                         <td className="py-3 pr-4">
                           <p className="font-bold">{c.owner.name || c.owner.email}</p>
                           <p className="text-xs text-muted">{c.owner.email}</p>
@@ -605,9 +636,26 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
                         </td>
                         <td className="py-3 pr-4 text-xs text-muted">{c.reportSummary || "No report"}</td>
                         <td className="py-3">
-                          <Badge status={c.status === "pending" ? "warning" : "healthy"} />
-                          {c.adminNotified && <p className="mt-1 text-[10px] text-muted">Admin notified</p>}
-                          {c.trainerNotified && <p className="mt-1 text-[10px] text-muted">Trainer email sent</p>}
+                          <Badge status={c.status === "pending_admin" || c.status === "pending" ? "warning" : c.status === "approved" || c.status === "active" ? "healthy" : "critical"} />
+                          <p className="mt-1 text-[10px] uppercase text-muted">{c.status.replace("_", " ")}</p>
+                          {(c.status === "pending_admin" || c.status === "pending") && (
+                            <div className="mt-3 flex flex-col gap-2">
+                              <button
+                                disabled={busy}
+                                onClick={() => reviewContract(c.id, "approve")}
+                                className="rounded-full bg-success px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                disabled={busy}
+                                onClick={() => reviewContract(c.id, "decline")}
+                                className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-bold disabled:opacity-60"
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}

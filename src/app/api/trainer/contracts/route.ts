@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireTrainerApi } from "@/lib/auth";
+import { PENDING_STATUSES, contractStatusLabel, isApprovedContractStatus } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
@@ -19,9 +20,13 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
-        owner: { select: { id: true, name: true, email: true } }
+        owner: { select: { id: true, name: true, email: true } },
+        conversation: { select: { id: true } }
       }
     });
+
+    const activeClients = contracts.filter((c) => isApprovedContractStatus(c.status));
+    const awaitingAdmin = contracts.filter((c) => PENDING_STATUSES.includes(c.status as (typeof PENDING_STATUSES)[number]));
 
     return NextResponse.json({
       trainer: trainerProfile
@@ -32,7 +37,10 @@ export async function GET() {
             email: trainerProfile.email
           }
         : null,
-      contracts
+      contracts,
+      activeClients,
+      awaitingAdmin,
+      statusLabels: Object.fromEntries(contracts.map((c) => [c.id, contractStatusLabel(c.status)]))
     });
   } catch (error) {
     if (error instanceof Error && error.message === "PASSWORD_CHANGE_REQUIRED") {

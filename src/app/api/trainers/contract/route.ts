@@ -12,6 +12,11 @@ export async function POST(req: NextRequest) {
     const trainerId = body.trainerId as string | undefined;
     const ownerMessage = (body.message as string | undefined)?.trim() || undefined;
 
+    const dogName = (body.dogName as string | undefined)?.trim() || undefined;
+    const dogBreed = (body.dogBreed as string | undefined)?.trim() || undefined;
+    const dogAge = (body.dogAge as string | undefined)?.trim() || undefined;
+    const dogNotes = (body.dogNotes as string | undefined)?.trim() || undefined;
+
     if (!trainerId) {
       return NextResponse.json({ error: "trainerId is required." }, { status: 400 });
     }
@@ -25,7 +30,11 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await prisma.trainerContract.findFirst({
-      where: { ownerId: user.id, trainerId, status: "pending" }
+      where: {
+        ownerId: user.id,
+        trainerId,
+        status: { in: ["pending_admin", "pending", "approved", "active"] }
+      }
     });
 
     if (existing) {
@@ -48,10 +57,14 @@ export async function POST(req: NextRequest) {
       data: {
         ownerId: user.id,
         trainerId: trainer.id,
+        dogName,
+        dogBreed,
+        dogAge,
+        dogNotes,
         ownerMessage,
         assessmentReport: report ? JSON.stringify(report) : null,
         reportSummary,
-        status: "pending"
+        status: "pending_admin"
       }
     });
 

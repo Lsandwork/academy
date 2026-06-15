@@ -50,6 +50,8 @@ model User {
   trainerContracts   TrainerContract[]
   adminNotifications AdminNotification[]
   trainerProfile     CertifiedTrainer?
+  conversationParticipants ConversationParticipant[]
+  sentMessages       Message[]             @relation("SentMessages")
 
   @@schema("academy")
 }
@@ -155,17 +157,63 @@ model TrainerContract {
   owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   trainerId        String
   trainer          CertifiedTrainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
-  status           String           @default("pending")
+  status           String           @default("pending_admin")
+  dogName          String?
+  dogBreed         String?
+  dogAge           String?
+  dogNotes         String?
   ownerMessage     String?
   assessmentReport String?
   reportSummary    String?
   trainerNotified  Boolean          @default(false)
   adminNotified    Boolean          @default(false)
+  approvedAt       DateTime?
+  approvedById     String?
+  conversation     Conversation?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
   @@index([ownerId])
   @@index([trainerId])
+  @@index([status])
+  @@schema("academy")
+}
+
+model Conversation {
+  id           String                    @id @default(cuid())
+  contractId   String?                   @unique
+  contract     TrainerContract?          @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  subject      String?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@schema("academy")
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@schema("academy")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
   @@schema("academy")
 }
 
