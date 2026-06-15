@@ -43,7 +43,7 @@ async function main() {
       slug: "ivonne-c",
       name: "Ivonne C.",
       email: "ivonneeBICE@gmail.com",
-      title: "Certified Professional Canine Fitness Trainer · ABCDT · AKC CGC Evaluator",
+      title: "Fitdog Certified Trainer · CPDT-KA · ABCDT · AKC CGC Evaluator",
       bio: "Ivonne is a Certified Professional Canine Fitness Trainer, ABCD Certified Dog Trainer, and AKC CGC Evaluator with over 7 years of experience working with dogs.",
       about:
         "Ivonne specializes in obedience, fitness, agility, and reactivity throughout the Los Angeles area. Her journey began with her own reactive dog, which sparked a passion for helping dogs and owners build confidence through humane, force-free training. She focuses on practical skills owners can use at home and in real-world settings.",
@@ -63,7 +63,7 @@ async function main() {
       slug: "amanda-n",
       name: "Amanda N.",
       email: "loveandcarepawbabys@gmail.com",
-      title: "Certified Dog Trainer · 5+ Years Experience",
+      title: "Fitdog Certified Trainer · IACP-CDTA · ABCDT · 5+ Years Experience",
       bio: "Certified dog trainer with over 5 years of experience. Specializes in obedience, agility, puppy development, and reactivity.",
       about:
         "Amanda's training journey began with her dog, Lola. Over more than five years she has helped owners with obedience, puppy development, agility foundations, and reactivity — always with patience, clarity, and force-free methods. She is known for helping families understand why behavior happens and what to practice between sessions.",
@@ -82,6 +82,38 @@ async function main() {
       qualifications: JSON.stringify([
         "IACP-CDTA (International Association of Canine Professionals Certified Dog Trainer)",
         "ABCDT (Animal Behavior College Dog Trainer)"
+      ])
+    },
+    {
+      slug: "brian-guzman",
+      name: "Brian Guzman",
+      email: "brian.guzman@fitdog.com",
+      title: "Fitdog Certified Trainer · Excursion Leader · Recall & Adventure Skills",
+      bio: "Brian is a Fitdog Certified Trainer and Excursion Leader with years of experience leading adventure hikes, beach outings, and group enrichment programs across Los Angeles.",
+      about:
+        "Brian has been part of the Fitdog team since 2018 and has served as an Excursion Leader since 2020, working with dogs in real-world environments where recall, leash skills, and calm social behavior matter most. He supports owners who want confident dogs on trails, at the beach, and in busy group settings — always using humane, force-free methods that prioritize safety and enjoyment.",
+      philosophy:
+        "Brian believes dogs learn best when training is embedded in real life — hikes, outings, and social experiences that build confidence without forcing compliance. His approach focuses on clear communication, positive reinforcement, and setting dogs up to succeed in the environments they actually live in.",
+      quote: "Every outing is a training opportunity. When dogs feel safe and understood, they show us how capable they really are.",
+      quoteAuthor: "Brian Guzman",
+      specialties: JSON.stringify([
+        "Adventure & Enrichment",
+        "Recall",
+        "Group Socialization",
+        "Leash Skills",
+        "Trail & Beach Outings"
+      ]),
+      classes: JSON.stringify([
+        "Adventure Hikes",
+        "Beach Excursions",
+        "Level II Group Outings",
+        "Real-World Recall Practice"
+      ]),
+      qualifications: JSON.stringify([
+        "Fitdog Certified Trainer",
+        "Fitdog Excursion Leader (since 2020)",
+        "Fitdog team member since 2018",
+        "Force-free, positive reinforcement methods"
       ])
     }
   ];

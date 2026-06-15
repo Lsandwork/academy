@@ -9,6 +9,7 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "trainers:sync": "tsx scripts/sync-trainers.ts",
     "trainers:seed": "tsx prisma/seed.ts",
     "users:repair": "tsx scripts/repair-user-accounts.ts",
     "sync:production": "tsx scripts/sync-production.ts",

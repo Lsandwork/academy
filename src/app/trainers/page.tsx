@@ -3,16 +3,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { buildAssessmentReport } from "@/lib/assessmentReport";
 import { prisma } from "@/lib/db";
 import { toTrainerProfile } from "@/lib/trainerProfile";
+import { sortTrainersByDisplayOrder } from "@/lib/trainerOrder";
 import TrainersClient from "./TrainersClient";
 
 export default async function TrainersPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/trainers");
 
-  const trainers = await prisma.certifiedTrainer.findMany({
-    where: { active: true },
-    orderBy: { name: "asc" }
-  });
+  const trainers = sortTrainersByDisplayOrder(
+    await prisma.certifiedTrainer.findMany({
+      where: { active: true }
+    })
+  );
 
   const assessmentReport = buildAssessmentReport(user);
 
