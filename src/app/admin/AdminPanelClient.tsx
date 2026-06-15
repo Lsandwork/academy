@@ -114,6 +114,14 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
   const [busy, setBusy] = useState(false);
   const [editRole, setEditRole] = useState<Role>("USER");
   const [editAccessLevel, setEditAccessLevel] = useState<AccessLevel>("FREE");
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<Role>("USER");
+  const [newAccessLevel, setNewAccessLevel] = useState<AccessLevel>("FREE");
+  const [newMustChangePassword, setNewMustChangePassword] = useState(true);
+  const [createdTempPassword, setCreatedTempPassword] = useState<string | null>(null);
 
   const selected = users.find((u) => u.id === selectedId);
 
@@ -286,6 +294,85 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
     );
   }
 
+  function resetAddUserForm() {
+    setNewEmail("");
+    setNewName("");
+    setNewPassword("");
+    setNewRole("USER");
+    setNewAccessLevel("FREE");
+    setNewMustChangePassword(true);
+    setCreatedTempPassword(null);
+  }
+
+  function handleNewRoleChange(role: Role) {
+    setNewRole(role);
+    if (role !== "USER" && newAccessLevel === "FREE") {
+      setNewAccessLevel("LIFETIME");
+    }
+  }
+
+  async function createUser() {
+    if (!isAdmin) return;
+
+    const email = newEmail.trim();
+    if (!email) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (newPassword && newPassword.length < 8) {
+      setError("Password must be at least 8 characters, or leave blank for a temporary password.");
+      return;
+    }
+
+    if (!confirm(`Create account for ${email} as ${roleLabel(newRole)}?`)) return;
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setCreatedTempPassword(null);
+
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        name: newName.trim() || undefined,
+        password: newPassword.trim() || undefined,
+        role: newRole,
+        accessLevel: newAccessLevel,
+        mustChangePassword: newPassword.trim() ? newMustChangePassword : true
+      })
+    });
+
+    const data = await res.json();
+    setBusy(false);
+
+    if (!res.ok) {
+      setError(data.error || "Could not create user.");
+      return;
+    }
+
+    setMessage(data.message || "User created.");
+    if (data.temporaryPassword) {
+      setCreatedTempPassword(data.temporaryPassword);
+    }
+
+    setNewEmail("");
+    setNewName("");
+    setNewPassword("");
+    setNewRole("USER");
+    setNewAccessLevel("FREE");
+    setNewMustChangePassword(true);
+    setShowAddUser(false);
+    await loadUsers();
+    if (data.user?.id) {
+      setSelectedId(data.user.id);
+      setEditRole(data.user.role);
+      setEditAccessLevel(data.user.accessLevel);
+    }
+  }
+
   async function grantCredits() {
     if (!selected || !isAdmin) return;
     const amount = Number((document.getElementById("grantAmount") as HTMLInputElement)?.value || 1);
@@ -455,6 +542,142 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
         )}
 
         {(tab === "users" || tab === "credits") && (
+          <>
+            {tab === "users" && isAdmin && (
+              <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-black">Add user</h2>
+                    <p className="mt-1 text-sm text-muted">
+                      Create a login and assign role permissions (standard user, trainer, staff, or admin).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddUser((open) => !open);
+                      if (showAddUser) resetAddUserForm();
+                    }}
+                    className="rounded-full bg-orange px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-dark"
+                  >
+                    {showAddUser ? "Cancel" : "+ Add user"}
+                  </button>
+                </div>
+
+                {createdTempPassword && (
+                  <div className="mt-4 rounded-2xl border border-orange/30 bg-orange/5 px-4 py-3 text-sm">
+                    <p className="font-bold text-charcoal">Temporary password (copy now — shown once):</p>
+                    <p className="mt-1 font-mono text-orange">{createdTempPassword}</p>
+                    <p className="mt-2 text-xs text-muted">The user must change this password on first login.</p>
+                  </div>
+                )}
+
+                {showAddUser && (
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label htmlFor="newEmail" className="text-sm font-bold text-charcoal">
+                        Email
+                      </label>
+                      <input
+                        id="newEmail"
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="person@example.com"
+                        className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="newName" className="text-sm font-bold text-charcoal">
+                        Name (optional)
+                      </label>
+                      <input
+                        id="newName"
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Display name"
+                        className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="newPassword" className="text-sm font-bold text-charcoal">
+                        Password (optional)
+                      </label>
+                      <input
+                        id="newPassword"
+                        type="text"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Leave blank to auto-generate"
+                        className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm"
+                      />
+                      <p className="mt-1.5 text-xs text-muted">Min 8 characters. Blank generates a one-time temporary password.</p>
+                    </div>
+                    <div>
+                      <label htmlFor="newRole" className="text-sm font-bold text-charcoal">
+                        Account role
+                      </label>
+                      <select
+                        id="newRole"
+                        value={newRole}
+                        onChange={(e) => handleNewRoleChange(e.target.value as Role)}
+                        className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm"
+                      >
+                        {roleOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1.5 text-xs text-muted">
+                        {roleOptions.find((o) => o.value === newRole)?.description}
+                      </p>
+                    </div>
+                    <div>
+                      <label htmlFor="newAccessLevel" className="text-sm font-bold text-charcoal">
+                        Lesson access
+                      </label>
+                      <select
+                        id="newAccessLevel"
+                        value={newAccessLevel}
+                        onChange={(e) => setNewAccessLevel(e.target.value as AccessLevel)}
+                        className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm"
+                      >
+                        {accessOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 text-sm text-charcoal">
+                        <input
+                          type="checkbox"
+                          checked={newPassword.trim() ? newMustChangePassword : true}
+                          disabled={!newPassword.trim()}
+                          onChange={(e) => setNewMustChangePassword(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        Require password change on first login
+                      </label>
+                    </div>
+                    <div className="md:col-span-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={createUser}
+                        className="rounded-full bg-charcoal px-6 py-3 text-sm font-bold text-white disabled:opacity-60"
+                      >
+                        {busy ? "Creating…" : "Create account"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
             <div className="rounded-3xl bg-white p-6 shadow-sm">
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." className="w-full rounded-xl border border-gray-200 px-4 py-3" />
@@ -632,6 +855,7 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
               </div>
             )}
           </div>
+          </>
         )}
 
         {tab === "diagnostics" && isAdmin && (
