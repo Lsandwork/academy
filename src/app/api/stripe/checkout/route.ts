@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const mode = planId === "monthly" ? "subscription" : "payment";
+  const mode = planId === "monthly" || planId === "premium" ? "subscription" : "payment";
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,

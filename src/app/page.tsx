@@ -3,7 +3,8 @@ import Link from "next/link";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 import { LandingTrackCard } from "@/components/LandingTrackCard";
 import { PublicHeader } from "@/components/PublicHeader";
-import { academyTracks, pricingPlans } from "@/data/academyCourses";
+import { mainPricingPlans, pricingHeadline, trustBadges } from "@/data/pricingContent";
+import { academyTracks } from "@/data/academyCourses";
 import { getCurrentUser } from "@/lib/auth";
 import { heroImage } from "@/lib/theme";
 
@@ -23,18 +24,14 @@ const features = [
   { icon: fitdogAcademyAssets.icons.benefits.results, title: "Results You Can See", body: "Real training for real life." }
 ];
 
-const stats = [
-  { value: "25K+", label: "Dogs Trained" },
-  { value: "4.9/5", label: "Average Rating" },
-  { value: "2M+", label: "Lessons Completed" },
-  { value: "50K+", label: "Happy Dog Parents" }
-];
-
-const planMeta = {
-  single_lesson: { icon: fitdogAcademyAssets.icons.pricing.singleLesson, border: "border-sky/40", button: "border border-sky/50 text-sky hover:bg-sky/10", cta: "View Lessons" },
-  monthly: { icon: fitdogAcademyAssets.icons.pricing.monthly, border: "border-orange ring-1 ring-orange/30", button: "bg-orange text-white hover:bg-orange-dark", cta: "Get Started" },
-  lifetime: { icon: fitdogAcademyAssets.icons.pricing.lifetime, border: "border-success/40", button: "border border-success/50 text-success hover:bg-success/10", cta: "Go Lifetime" }
+const planMeta: Record<string, { border: string; button: string }> = {
+  single_lesson: { border: "border-sky/40", button: "border border-sky/50 text-sky hover:bg-sky/10" },
+  monthly: { border: "border-orange ring-1 ring-orange/30", button: "bg-orange text-white hover:bg-orange-dark" },
+  premium: { border: "border-white/20", button: "border border-white/20 text-white hover:bg-white/10" },
+  lifetime: { border: "border-success/40", button: "border border-success/50 text-success hover:bg-success/10" }
 };
+
+const landingPlans = mainPricingPlans.filter((p) => ["single_lesson", "monthly", "premium", "lifetime"].includes(p.id));
 
 export default async function HomePage() {
   const user = await getCurrentUser();
@@ -125,68 +122,57 @@ export default async function HomePage() {
       </section>
 
       <section id="pricing" className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-10 lg:grid-cols-[1fr_2fr_1fr] lg:items-start">
-          <div>
-            <h2 className="text-3xl font-black">Choose Your Access</h2>
-            <p className="mt-2 text-white/55">Flexible options to fit your goals.</p>
-          </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl font-black md:text-4xl">{pricingHeadline}</h2>
+          <p className="mt-3 text-white/55">
+            From a single lesson to monthly trainer coaching—with premium support when you need more hands-on help.
+          </p>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            {pricingPlans.map((plan) => {
-              const meta = planMeta[plan.id];
-              return (
-                <div
-                  key={plan.id}
-                  className={`relative rounded-2xl border bg-[#161b22] p-5 ${meta.border} ${plan.badge ? "pt-8" : ""}`}
-                >
-                  {plan.badge && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange px-3 py-1 text-[10px] font-black tracking-wide text-white">
-                      MOST POPULAR
-                    </span>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {landingPlans.map((plan) => {
+            const meta = planMeta[plan.id];
+            return (
+              <div
+                key={plan.id}
+                className={`relative rounded-2xl border bg-[#161b22] p-5 ${meta.border} ${plan.badge ? "pt-8" : ""} ${plan.featured ? "shadow-xl shadow-orange/10" : ""}`}
+              >
+                {plan.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-orange px-3 py-1 text-[10px] font-black tracking-wide text-white">
+                    {plan.badge.toUpperCase()}
+                  </span>
+                )}
+                <p className="text-sm font-bold text-white/80">{plan.name}</p>
+                <p className="mt-1 text-xs text-white/45">{plan.subtitle}</p>
+                <p className="mt-4 text-2xl font-black text-white">
+                  {plan.price}
+                  {plan.frequency && plan.frequency !== "one-time" && (
+                    <span className="text-sm font-semibold text-white/50">{plan.frequency}</span>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Image src={meta.icon} alt="" width={28} height={28} aria-hidden />
-                    <p className="text-sm font-bold text-white/80">{plan.title}</p>
-                  </div>
-                  <p className="mt-3 text-2xl font-black text-white">{plan.priceLabel}</p>
-                  <Link href="/pricing" className={`mt-5 flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-bold ${meta.button}`}>
-                    {meta.cta}
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-5">
-            <div className="grid grid-cols-2 gap-4">
-              {stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-xl font-black text-orange">{stat.value}</p>
-                  <p className="text-xs text-white/50">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 border-t border-white/10 pt-5">
-              <div className="flex items-start gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-                  <Image
-                    src={fitdogAcademyAssets.coursePhotos.puppyFoundations}
-                    alt="Sarah and Cooper"
-                    fill
-                    className="object-cover"
-                    sizes="40px"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm italic text-white/70">
-                    &ldquo;Fitdog Academy changed everything for us. Our dog is calmer, more confident, and we enjoy every day together.&rdquo;
-                  </p>
-                  <p className="mt-2 text-xs font-bold text-white/50">— Sarah &amp; Cooper</p>
-                  <p className="text-xs text-orange">★★★★★</p>
-                </div>
+                </p>
+                <Link
+                  href={`/pricing?plan=${plan.id}`}
+                  className={`mt-5 flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-bold ${meta.button}`}
+                >
+                  {plan.cta}
+                </Link>
               </div>
-            </div>
-          </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {trustBadges.map((label) => (
+            <span key={label} className="rounded-full border border-white/10 bg-[#161b22] px-4 py-2 text-xs font-semibold text-white/70">
+              {label}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link href="/pricing" className="inline-flex rounded-full border border-orange/40 px-6 py-3 text-sm font-bold text-orange hover:bg-orange/10">
+            View all plans &amp; lesson previews →
+          </Link>
         </div>
       </section>
 

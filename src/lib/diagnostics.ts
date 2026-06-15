@@ -135,7 +135,7 @@ export async function runDiagnostics() {
         { label: "Tracks", status: academyTracks.length === 6 ? "healthy" : "warning", detail: `${academyTracks.length} / 6 expected` },
         { label: "Lessons", status: academyLessons.length === 35 ? "healthy" : "warning", detail: `${academyLessons.length} / 35 expected` },
         { label: "Free previews", status: freePreviews === 3 ? "healthy" : "warning", detail: `${freePreviews} / 3 expected` },
-        { label: "Pricing plans", status: pricingPlans.length === 3 ? "healthy" : "warning", detail: `${pricingPlans.length} / 3 expected` },
+        { label: "Pricing plans", status: pricingPlans.length >= 4 ? "healthy" : "warning", detail: `${pricingPlans.length} plans configured` },
         ...lessonIssues.slice(0, 12)
       ]
     },
@@ -278,7 +278,7 @@ export async function runDiagnostics() {
     overall,
     summaryCards: [
       { label: "Course Library", status: academyLessons.length === 35 ? "healthy" : "warning", detail: `${academyLessons.length} / 35 lessons loaded` },
-      { label: "Pricing", status: pricingPlans.length === 3 && priceIds.length === 3 ? "healthy" : "warning", detail: `${priceIds.length} / 3 Stripe prices configured` },
+      { label: "Pricing", status: priceIds.length >= 3 ? "healthy" : "warning", detail: `${priceIds.length} / ${Object.keys(stripePrices).length} Stripe prices configured` },
       { label: "Access Control", status: "healthy", detail: "Locked content protected" },
       { label: "Videos", status: videosConnected ? "warning" : "not_configured", detail: `${videosConnected} / ${academyLessons.length} videos connected` },
       { label: "Worksheets", status: "healthy", detail: `${academyLessons.length} premium PDF worksheets (all lessons)` },

@@ -1,3 +1,5 @@
+import { stripeCheckoutPlans, type CheckoutPlanId } from "./pricingContent";
+
 export type AccessType = "free" | "single_lesson" | "monthly" | "lifetime";
 
 export type TrackCategory = "puppy" | "obedience" | "calm" | "separation" | "reactivity" | "enrichment";
@@ -31,7 +33,7 @@ export interface AcademyLesson {
 }
 
 export interface PricingPlan {
-  id: "single_lesson" | "monthly" | "lifetime";
+  id: CheckoutPlanId;
   title: string;
   subtitle: string;
   priceLabel: string;
@@ -39,6 +41,16 @@ export interface PricingPlan {
   ctaLabel: string;
   badge?: string;
 }
+
+export const pricingPlans: PricingPlan[] = stripeCheckoutPlans.map((plan) => ({
+  id: plan.id,
+  title: plan.name,
+  subtitle: plan.subtitle,
+  priceLabel: plan.frequency === "one-time" ? plan.price : `${plan.price}${plan.frequency}`,
+  benefits: plan.features.slice(0, 5),
+  ctaLabel: plan.cta,
+  badge: plan.badge ?? undefined
+}));
 
 export const academyTracks: AcademyTrack[] = [
   { id: "puppy-foundations", title: "Puppy Foundations", subtitle: "Build a confident start.", category: "puppy", description: "Start your puppy off with structure, confidence, and good habits before problem behaviors become routines. This track teaches owners how to handle potty training, puppy biting, crate comfort, socialization, early leash skills, alone-time practice, and basic manners.", color: "#F15A24", icon: "✦", lessonIds: ["bringing-your-puppy-home", "potty-training-without-the-guesswork", "puppy-biting-and-teething", "crate-and-pen-comfort", "puppy-socialization-the-right-way", "puppy-alone-time-foundations"] },
@@ -85,12 +97,6 @@ export const academyLessons: AcademyLesson[] = [
   { id: "enrichment-101", trackId: "fitdog-enrichment-at-home", title: "Enrichment 101", durationMinutes: 18, summary: "Enrichment is not a bonus. It is part of a healthy behavior plan.", topics: ["Food puzzles", "Sniff games", "Scatter feeding", "Training games", "Decompression walks", "Chewing", "Problem-solving"], takeaway: "Enrichment is not about making your dog tired. It is about helping your dog feel fulfilled.", worksheetTitle: "Enrichment Starter Plan", isFreePreview: false },
   { id: "fitness-and-body-awareness", trackId: "fitdog-enrichment-at-home", title: "Fitness and Body Awareness", durationMinutes: 20, summary: "A confident dog is not just mentally engaged. They are comfortable in their body, too.", topics: ["Safe movement", "Balance exercises", "Confidence with surfaces", "Low-impact conditioning", "Warmups and cooldowns", "When to ask a vet"], takeaway: "Fitness should build confidence, not push dogs past comfort or safety.", worksheetTitle: "Fitness and Body Awareness Checklist", isFreePreview: false },
   { id: "better-walks-through-sniffing", trackId: "fitdog-enrichment-at-home", title: "Better Walks Through Sniffing", durationMinutes: 17, summary: "Sometimes the best walk is not the longest walk. It is the walk that lets your dog decompress.", topics: ["Why sniffing matters", "Structured walks versus decompression walks", "Sniff breaks as rewards", "Reducing leash frustration", "Walk planning"], takeaway: "A better walk gives your dog information, movement, and decompression.", worksheetTitle: "Better Walks Planning Guide", isFreePreview: false }
-];
-
-export const pricingPlans: PricingPlan[] = [
-  { id: "single_lesson", title: "Single Lesson", subtitle: "Choose one lesson", priceLabel: "$29–$49", benefits: ["Lifetime access to the lesson", "Worksheets & trainer notes included", "Great for one specific training goal"], ctaLabel: "Buy Lesson" },
-  { id: "monthly", title: "Monthly Membership", subtitle: "Full access to all lessons", priceLabel: "$39/month", badge: "MOST POPULAR", benefits: ["Unlimited access to all lessons", "New lessons added every month", "Cancel anytime"], ctaLabel: "Join Monthly" },
-  { id: "lifetime", title: "Lifetime Access", subtitle: "One-time payment, all current and future lessons", priceLabel: "$499", benefits: ["Forever access to all current lessons", "All future lessons included", "One-time payment"], ctaLabel: "Get Lifetime Access" }
 ];
 
 export const getTrack = (id: string) => academyTracks.find((track) => track.id === id);
