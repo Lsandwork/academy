@@ -99,7 +99,7 @@ async function main() {
     });
   }
 
-  await seedTrainerAccounts(prisma);
+  await seedTrainerAccounts(prisma, { resetPassword: process.env.RESET_TRAINER_PASSWORDS === "true" });
 
   console.log(`Seeded admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${supabaseId ? ` (linked supabaseId)` : ""}`);
   console.log(`Seeded ${trainers.length} certified trainers`);

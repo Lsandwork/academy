@@ -24,13 +24,13 @@ export function isStaffOrAdmin(user: Pick<SafeUser, "role">) {
 }
 
 export function hasFullPaidAccess(user: Pick<SafeUser, "role" | "accessLevel">) {
-  if (isAdmin(user)) return true;
+  if (isAdmin(user) || isTrainer(user)) return true;
   return user.accessLevel === AccessLevel.MONTHLY || user.accessLevel === AccessLevel.LIFETIME;
 }
 
 export function hasLessonAccess(user: SafeUser, lessonId: string, isFreePreview: boolean) {
   if (isFreePreview) return true;
-  if (isAdmin(user)) return true;
+  if (isAdmin(user) || isTrainer(user)) return true;
   if (hasFullPaidAccess(user)) return true;
   return parseJsonArray(user.purchasedLessonIds).includes(lessonId);
 }
