@@ -26,6 +26,10 @@ export const STATIC_WORKSHEET_TRACKS = {
   "leash-reactivity-reset": {
     dir: "content/worksheets/leash-reactivity-reset",
     minBytes: 80_000
+  },
+  "fitdog-enrichment-at-home": {
+    dir: "content/worksheets/fitdog-enrichment-at-home",
+    minBytes: 80_000
   }
 } as const;
 

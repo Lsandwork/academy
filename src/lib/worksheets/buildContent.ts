@@ -36,6 +36,12 @@ function suppliesForLesson(lesson: AcademyLesson, category: TrackCategory): stri
     if (lesson.id === "polite-greetings") return ["Leash", "Treat pouch", "Mat/bed", "Baby gate (optional)"];
     return ["Mat/bed", "Treat pouch", "Quiet room", "Enrichment chew or Kong"];
   }
+  if (category === "enrichment") {
+    if (lesson.id === "enrichment-101") return ["Food puzzle or Kong", "Treats/kibble", "Cardboard box", "Snuffle mat or towel"];
+    if (lesson.id === "fitness-and-body-awareness") return ["Non-slip mat", "Low platform or book", "Treats", "Timer"];
+    if (lesson.id === "better-walks-through-sniffing") return ["Harness + leash", "Treat pouch", "Long line (optional)", "Notebook"];
+    return ["Treat pouch", "Enrichment toys", "Mat", "Timer"];
+  }
   return ["High-value treats", "Quiet space", "Treat pouch"];
 }
 
@@ -154,6 +160,27 @@ function practiceSteps(lesson: AcademyLesson, category: TrackCategory): string[]
       "3. If your dog succeeds 4/5 times, note whether to hold or advance one step.",
       "4. If your dog fails twice, move back one stage — non-linear is normal.",
       "5. Write one real-world win from this week, however small."
+    ],
+    "enrichment-101": [
+      "1. Pick one food-based enrichment: scatter feed, puzzle, or stuffed Kong.",
+      "2. Set it up in a quiet spot. Let your dog work for 5–10 minutes without interruption.",
+      "3. Add one sniff game: hide treats in a towel or cardboard box.",
+      "4. Log which activity kept your dog engaged longest.",
+      "5. Schedule one enrichment session before a usual chaos time (before guests, before leaving)."
+    ],
+    "fitness-and-body-awareness": [
+      "1. Warm up with 30 seconds of slow walking or gentle movement indoors.",
+      "2. Practice one balance skill: front paws on a low book or platform for 3 seconds.",
+      "3. Guide your dog over a non-slip surface they are unsure about — treat for brave steps.",
+      "4. Cool down with calm sniffing or a chew for 2 minutes.",
+      "5. Note any hesitation or discomfort — stop and consult your vet if pain is suspected."
+    ],
+    "better-walks-through-sniffing": [
+      "1. Plan one decompression walk: loose leash, no strict heel, sniffing allowed.",
+      "2. Mark and treat when your dog chooses to sniff — that is the reward.",
+      "3. Use a sniff break after a structured training rep on your next walk.",
+      "4. Compare: one structured walk vs. one sniff-focused walk. Log your dog's energy after.",
+      "5. Write one route change that gives your dog more sniff opportunities."
     ]
   };
 
@@ -196,6 +223,10 @@ function mistakesForLesson(lesson: AcademyLesson, category: TrackCategory): stri
     if (lesson.id === "grooming-and-handling-prep" || lesson.id === "vet-visit-confidence") {
       items.push("Forcing handling when the dog pulls away.", "Waiting until appointment day to start practice.");
     }
+  } else if (category === "enrichment") {
+    items.push("Using enrichment only when the dog is already destructive.", "Puzzles that are too hard — frustration, not fulfillment.");
+    if (lesson.id === "fitness-and-body-awareness") items.push("Pushing balance exercises when your dog shows fear or pain.");
+    if (lesson.id === "better-walks-through-sniffing") items.push("Every walk is a strict heel — no sniff time at all.");
   } else {
     items.push("Sessions that run too long.", "Only rewarding performance, not calm.");
   }
@@ -230,6 +261,14 @@ function troubleshooting(lesson: AcademyLesson, category: TrackCategory) {
     if (lesson.id === "barking-basics") {
       rows.push({ trigger: "Barking increases when ignored", tryThis: "Check if it is demand barking — reward quiet instead." });
     }
+  } else if (category === "enrichment") {
+    rows.push(
+      { trigger: "Dog loses interest fast", tryThis: "Make the puzzle easier or use higher-value food." },
+      { trigger: "Still restless after enrichment", tryThis: "Add sniffing or decompression — tired ≠ fulfilled." }
+    );
+    if (lesson.id === "fitness-and-body-awareness") {
+      rows.push({ trigger: "Refuses balance work", tryThis: "Lower the surface. Reward one paw on, not full pose." });
+    }
   } else {
     rows.push(
       { trigger: "Loses focus", tryThis: "Shorten sessions, upgrade rewards." },
@@ -241,15 +280,23 @@ function troubleshooting(lesson: AcademyLesson, category: TrackCategory) {
 }
 
 function successChecklist(lesson: AcademyLesson, category: TrackCategory): string[] {
-  const items = [
-    `I can explain "${lesson.title}" clearly.`,
-    "My dog stayed under threshold most of the week.",
-    "I ended sessions while my dog could still succeed."
-  ];
+  const items =
+    category === "enrichment"
+      ? [
+          `I can explain "${lesson.title}" clearly.`,
+          "I added at least one new enrichment activity this week.",
+          "I ended sessions while my dog was still engaged."
+        ]
+      : [
+          `I can explain "${lesson.title}" clearly.`,
+          "My dog stayed under threshold most of the week.",
+          "I ended sessions while my dog could still succeed."
+        ];
   if (category === "separation") items.push("Video shows calm body language in short absences.");
   if (category === "reactivity") items.push("My dog notices triggers and eats at working distance.");
   if (category === "obedience") items.push("4/5 success rate in an easy environment.");
   if (category === "calm") items.push("I rewarded at least three calm moments this week.");
+  if (category === "enrichment") items.push("My dog had daily outlets for sniffing, chewing, or problem-solving.");
   return items.slice(0, 4);
 }
 
@@ -267,6 +314,9 @@ function trackerHeaders(category: TrackCategory, lesson: AcademyLesson): string[
   if (lesson.id === "emergency-walk-skills") return ["Date", "Skill", "Setup", "Success", "Notes"];
   if (lesson.id === "better-leash-handling") return ["Date", "Location", "Leash tension", "Handler note", "Next"];
   if (lesson.id === "rebuilding-real-world-confidence") return ["Date", "Stage", "Environment", "Response", "Next"];
+  if (lesson.id === "enrichment-101") return ["Date", "Activity", "Duration", "Engagement 1–5", "Notes"];
+  if (lesson.id === "fitness-and-body-awareness") return ["Date", "Exercise", "Duration", "Confidence 1–5", "Notes"];
+  if (lesson.id === "better-walks-through-sniffing") return ["Date", "Walk type", "Duration", "Sniff time", "Notes"];
   if (category === "separation") return ["Date", "Duration", "Body lang.", "Setup", "Next"];
   if (category === "reactivity") return ["Date", "Location", "Distance", "Response", "Next"];
   return ["Date", "Duration", "Environment", "Response", "Next"];
@@ -288,7 +338,10 @@ function trackerRows(category: TrackCategory, lesson: AcademyLesson): string[][]
     "look-at-that": ["Day 1", "Person walking", "60 ft", "3 looks", "End early"],
     "emergency-walk-skills": ["Day 1", "U-turn", "Quiet block", "4/5", ""],
     "better-leash-handling": ["Day 1", "Main st.", "Loose 70%", "Arc past dog", "Reward at hip"],
-    "rebuilding-real-world-confidence": ["Day 1", "Trigger far away", "Quiet park", "Calm", "Repeat"]
+    "rebuilding-real-world-confidence": ["Day 1", "Trigger far away", "Quiet park", "Calm", "Repeat"],
+    "enrichment-101": ["Day 1", "Scatter feed", "8 min", "5", "Used breakfast kibble"],
+    "fitness-and-body-awareness": ["Day 1", "Paws on book", "3 sec", "4", ""],
+    "better-walks-through-sniffing": ["Day 1", "Decompression", "20 min", "Most of walk", "Calmer after"]
   };
   const hint = hints[lesson.id];
   return Array.from({ length: MAX_TRACKER_ROWS }, (_, i) => (i === 0 && hint ? hint : headers.map(() => "")));
@@ -312,13 +365,17 @@ function headlineForLesson(lesson: AcademyLesson, category: TrackCategory): stri
     "safety-and-walk-management": "Safety is part of training.",
     "emergency-walk-skills": "Rehearse exits when nothing is happening.",
     "better-leash-handling": "Soft leash. Early distance.",
-    "rebuilding-real-world-confidence": "Stack small wins. Build real confidence."
+    "rebuilding-real-world-confidence": "Stack small wins. Build real confidence.",
+    "enrichment-101": "Fulfillment beats exhaustion.",
+    "fitness-and-body-awareness": "Build body confidence safely.",
+    "better-walks-through-sniffing": "Let sniffing be the point."
   };
   if (map[lesson.id]) return map[lesson.id];
   if (category === "separation") return "Work below threshold. Track what you see.";
   if (category === "reactivity") return "Create space. Build calm reps.";
   if (category === "puppy") return "Small steps. Calm wins.";
   if (category === "calm") return "Calm is a skill worth training.";
+  if (category === "enrichment") return "Enrich daily. Track what works.";
   return `Practice ${lesson.title.toLowerCase()} with clarity.`;
 }
 
@@ -344,6 +401,13 @@ function ruleCardsForLesson(lesson: AcademyLesson, category: TrackCategory) {
       { title: "End on calm", body: lesson.takeaway.slice(0, 90) + (lesson.takeaway.length > 90 ? "…" : ""), accent: "green" as const }
     ];
   }
+  if (category === "enrichment") {
+    return [
+      { title: "Daily outlets", body: "Sniffing, chewing, and problem-solving are needs — not extras.", accent: "orange" as const },
+      { title: "Match difficulty", body: "Enrichment should engage, not frustrate.", accent: "sky" as const },
+      { title: "Track engagement", body: lesson.takeaway.slice(0, 90) + (lesson.takeaway.length > 90 ? "…" : ""), accent: "green" as const }
+    ];
+  }
   return [
     { title: "Short sessions", body: "Keep practice to 3–5 minutes.", accent: "orange" as const },
     { title: "Clear rewards", body: "Mark the exact moment your dog gets it right.", accent: "sky" as const },
@@ -356,14 +420,19 @@ function trainerNote(category: TrackCategory): string | undefined {
     separation: "If your dog shows panic or cannot eat when alone, pause increases and contact a professional.",
     reactivity: "Stay below threshold. Distance and safety come before performance.",
     puppy: "A calm three-minute session beats a frustrating twenty-minute one.",
-    calm: "If your dog cannot settle, make the setup easier before adding duration."
+    calm: "If your dog cannot settle, make the setup easier before adding duration.",
+    enrichment: "If your dog finishes puzzles instantly, increase difficulty slowly — or add sniffing."
   };
   return notes[category];
 }
 
-function safetyNote(category: TrackCategory): string {
+function safetyNote(category: TrackCategory, lesson: AcademyLesson): string {
   if (category === "separation") return "No flooding or cry-it-out. Contact a vet or behavior pro for panic or self-injury.";
   if (category === "reactivity") return "No forced greetings or punishment. Safety and distance support progress.";
+  if (category === "enrichment" && lesson.id === "fitness-and-body-awareness") {
+    return "Stop if your dog shows pain, limping, or fear. Consult your vet before fitness work.";
+  }
+  if (category === "enrichment") return "Supervise new enrichment setups. Remove items your dog could swallow or destroy unsafely.";
   return "Use humane, reward-based training. Consult a trainer or vet for pain, fear, or aggression.";
 }
 
@@ -437,7 +506,7 @@ function reviewPage(lesson: AcademyLesson, category: TrackCategory): WorksheetPa
           lesson.homework ||
           `Practice one skill from "${lesson.title}" three times this week. Note what to simplify.`,
         reflectionPrompts: ["What went well?", "When did my dog struggle?", "Questions for my Fitdog trainer:"],
-        safetyNote: safetyNote(category)
+        safetyNote: safetyNote(category, lesson)
       }
     ]
   };

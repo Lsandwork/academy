@@ -20,6 +20,8 @@
     "worksheets:sync-separation-support": "tsx scripts/sync-separation-support-worksheets.ts",
     "worksheets:generate-leash-reactivity": "tsx scripts/generate-leash-reactivity-worksheets.ts",
     "worksheets:sync-leash-reactivity": "tsx scripts/sync-leash-reactivity-worksheets.ts",
+    "worksheets:generate-enrichment": "tsx scripts/generate-enrichment-worksheets.ts",
+    "worksheets:sync-enrichment": "tsx scripts/sync-enrichment-worksheets.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
