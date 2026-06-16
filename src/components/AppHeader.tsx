@@ -25,10 +25,13 @@ export function AppHeader({ user }: { user: SafeUser }) {
             </Link>
           ))}
           {(user.role === "STAFF" || user.role === "ADMIN") && (
-            <Link href="/admin" className="hover:text-orange">Admin</Link>
+            <>
+              <Link href="/admin" className="hover:text-orange">Admin</Link>
+              <Link href="/admin/trainer-portal/dashboard" className="hover:text-orange">Trainer Portal</Link>
+            </>
           )}
           {user.role === "TRAINER" && (
-            <Link href="/trainer" className="hover:text-orange">Trainer Portal</Link>
+            <Link href="/trainer/dashboard" className="hover:text-orange">Trainer Portal</Link>
           )}
         </nav>
         <div className="flex items-center gap-3">
@@ -57,10 +60,13 @@ export function AppHeader({ user }: { user: SafeUser }) {
           </Link>
         ))}
         {(user.role === "STAFF" || user.role === "ADMIN") && (
-          <Link href="/admin" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Admin</Link>
+          <>
+            <Link href="/admin" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Admin</Link>
+            <Link href="/admin/trainer-portal/dashboard" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Trainer Portal</Link>
+          </>
         )}
         {user.role === "TRAINER" && (
-          <Link href="/trainer" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Trainer</Link>
+          <Link href="/trainer/dashboard" className="shrink-0 whitespace-nowrap text-charcoal hover:text-orange">Trainer Portal</Link>
         )}
       </nav>
     </header>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { getLesson } from "@/data/academyCourses";
@@ -502,6 +503,18 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
               <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Paid users</p><p className="text-2xl font-black">{users.filter((u) => u.accessLevel !== "FREE").length}</p></div>
               <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-muted">Credits outstanding</p><p className="text-2xl font-black">{users.reduce((s, u) => s + u.creditBalance, 0)}</p></div>
             </div>
+
+            <Link
+              href="/admin/trainer-portal/dashboard"
+              className="block rounded-3xl bg-white p-6 shadow-sm ring-1 ring-orange/20 transition hover:-translate-y-0.5 hover:ring-orange/40"
+            >
+              <p className="text-sm font-black uppercase tracking-[0.15em] text-orange">Trainer & admin accounts</p>
+              <h2 className="mt-2 text-xl font-black text-charcoal">Open Trainer Portal</h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted">
+                Trainer Dashboard, Course Management, and Student Support — sessions, progress, curriculum, and owner messaging.
+              </p>
+              <span className="mt-4 inline-flex text-sm font-bold text-orange">Go to portal →</span>
+            </Link>
 
             {isAdmin && (
               <div className="rounded-3xl bg-white p-6 shadow-sm">
