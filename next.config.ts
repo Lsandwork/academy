@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: traceExcludes,
   /** Bundle premium worksheet PDFs + logo assets into the worksheet API lambda on Vercel. */
   outputFileTracingIncludes: {
-    "/api/lessons/[lessonId]/worksheet": [
+    "/api/lessons/[lessonId]/worksheet/route": [
       "./content/worksheets/**/*",
       "./public/assets/fitdog-academy/logos/**/*"
     ]

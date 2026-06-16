@@ -44,7 +44,17 @@ export function isStaticWorksheetTrack(trackId: string): trackId is StaticWorksh
 }
 
 function staticRootForTrack(trackId: StaticWorksheetTrackId): string {
-  return path.join(process.cwd(), STATIC_WORKSHEET_TRACKS[trackId].dir);
+  const rel = STATIC_WORKSHEET_TRACKS[trackId].dir;
+  const candidates = [
+    path.join(process.cwd(), rel),
+    path.join(process.cwd(), ".next/server", rel)
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return path.join(process.cwd(), rel);
 }
 
 export function staticWorksheetPath(track: AcademyTrack, lesson: AcademyLesson): string | null {

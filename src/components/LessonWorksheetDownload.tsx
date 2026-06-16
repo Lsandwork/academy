@@ -24,13 +24,25 @@ export function LessonWorksheetDownload({
     setError("");
 
     try {
-      const res = await fetch(`/api/lessons/${lessonId}/worksheet`);
+      const res = await fetch(`/api/lessons/${lessonId}/worksheet`, { credentials: "same-origin" });
+      const contentType = res.headers.get("Content-Type") || "";
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Download failed.");
+        if (contentType.includes("application/json")) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Download failed.");
+        }
+        throw new Error(`Download failed (${res.status}). Please try again or contact support.`);
+      }
+
+      if (!contentType.includes("application/pdf")) {
+        throw new Error("Worksheet download returned an unexpected response. Please try again.");
       }
 
       const blob = await res.blob();
+      if (!blob.size) {
+        throw new Error("Worksheet file was empty. Please try again.");
+      }
       const disposition = res.headers.get("Content-Disposition") || "";
       const match = disposition.match(/filename="([^"]+)"/);
       const filename = match?.[1] || `fitdog-${lessonId}-worksheet.pdf`;
