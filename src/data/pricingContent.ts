@@ -343,6 +343,7 @@ export const coursePreviews: CoursePreview[] = [
     ],
     recommendedPlan: "AKC CGC Prep Program",
     recommendedPlanId: "cgc_prep",
+    trackId: "akc-cgc-prep",
     cta: "View CGC Prep Plan"
   }
 ];

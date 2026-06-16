@@ -135,8 +135,8 @@ export async function runDiagnostics() {
     {
       title: "Course Content",
       items: [
-        { label: "Tracks", status: academyTracks.length === 6 ? "healthy" : "warning", detail: `${academyTracks.length} / 6 expected` },
-        { label: "Lessons", status: academyLessons.length === 35 ? "healthy" : "warning", detail: `${academyLessons.length} / 35 expected` },
+        { label: "Tracks", status: academyTracks.length === 7 ? "healthy" : "warning", detail: `${academyTracks.length} / 7 expected` },
+        { label: "Lessons", status: academyLessons.length === 45 ? "healthy" : "warning", detail: `${academyLessons.length} / 45 expected` },
         { label: "Free previews", status: freePreviews === 3 ? "healthy" : "warning", detail: `${freePreviews} / 3 expected` },
         { label: "Pricing plans", status: pricingPlans.length >= 4 ? "healthy" : "warning", detail: `${pricingPlans.length} plans configured` },
         ...lessonIssues.slice(0, 12)
@@ -217,7 +217,7 @@ export async function runDiagnostics() {
       title: "Performance",
       items: [
         { label: "Image optimization", status: "healthy", detail: "Next.js Image used on key pages" },
-        { label: "Static course data", status: "healthy", detail: "35 lessons loaded from static module" },
+        { label: "Static course data", status: "healthy", detail: `${academyLessons.length} lessons loaded from static module` },
         { label: "Bundle", status: "healthy", detail: "Run production build for bundle analysis" }
       ]
     },
@@ -280,7 +280,7 @@ export async function runDiagnostics() {
     environment: env,
     overall,
     summaryCards: [
-      { label: "Course Library", status: academyLessons.length === 35 ? "healthy" : "warning", detail: `${academyLessons.length} / 35 lessons loaded` },
+      { label: "Course Library", status: academyLessons.length === 45 ? "healthy" : "warning", detail: `${academyLessons.length} / 45 lessons loaded` },
       { label: "Pricing", status: priceIds.length >= 3 ? "healthy" : "warning", detail: `${priceIds.length} / ${Object.keys(stripePrices).length} Stripe prices configured` },
       { label: "Access Control", status: "healthy", detail: "Locked content protected" },
       { label: "Videos", status: videosConnected ? "warning" : "not_configured", detail: `${videosConnected} / ${academyLessons.length} videos connected` },

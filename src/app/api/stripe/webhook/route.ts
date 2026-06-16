@@ -5,6 +5,7 @@ import { logError } from "@/lib/errors";
 import { parseJsonArray } from "@/lib/user";
 import { prisma } from "@/lib/db";
 import { PlanId, getStripeClient, getWebhookSecret, planToAccessLevel } from "@/lib/stripe";
+import { cgcLessonIds } from "@/data/akcCgcPrep";
 
 export async function POST(req: NextRequest) {
   const stripe = await getStripeClient();
@@ -35,31 +36,52 @@ export async function POST(req: NextRequest) {
     if (userId && planId) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user) {
-        const accessLevel = planToAccessLevel(planId);
-        const purchased = parseJsonArray(user.purchasedLessonIds);
-        const nextPurchased =
-          planId === "single_lesson" && lessonId && !purchased.includes(lessonId)
-            ? [...purchased, lessonId]
-            : purchased;
+        if (planId === "cgc_prep" || planId === "cgc_prep_eval") {
+          const purchased = [...new Set([...parseJsonArray(user.purchasedLessonIds), ...cgcLessonIds])];
+          await prisma.user.update({
+            where: { id: userId },
+            data: { purchasedLessonIds: JSON.stringify(purchased) }
+          });
 
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            accessLevel,
-            purchasedLessonIds: JSON.stringify(nextPurchased)
-          }
-        });
+          await logUserActivity({
+            userId,
+            userEmail: user.email,
+            category: "payment",
+            action: "purchase_completed",
+            summary: `${user.email} purchased AKC CGC Prep${planId === "cgc_prep_eval" ? " + Evaluation" : ""}`,
+            metadata: { planId, lessonIds: cgcLessonIds },
+            targetType: "course",
+            targetId: "akc-cgc-prep"
+          });
+        } else {
+          const accessLevel = planToAccessLevel(
+            planId as Exclude<PlanId, "cgc_prep" | "cgc_prep_eval">
+          );
+          const purchased = parseJsonArray(user.purchasedLessonIds);
+          const nextPurchased =
+            planId === "single_lesson" && lessonId && !purchased.includes(lessonId)
+              ? [...purchased, lessonId]
+              : purchased;
 
-        await logUserActivity({
-          userId,
-          userEmail: user.email,
-          category: "payment",
-          action: "purchase_completed",
-          summary: `${user.email} purchased ${planId.replace("_", " ")}${lessonId ? ` (${lessonId})` : ""}`,
-          metadata: { planId, lessonId: lessonId || null, accessLevel },
-          targetType: "user",
-          targetId: userId
-        });
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              accessLevel,
+              purchasedLessonIds: JSON.stringify(nextPurchased)
+            }
+          });
+
+          await logUserActivity({
+            userId,
+            userEmail: user.email,
+            category: "payment",
+            action: "purchase_completed",
+            summary: `${user.email} purchased ${planId.replace("_", " ")}${lessonId ? ` (${lessonId})` : ""}`,
+            metadata: { planId, lessonId: lessonId || null, accessLevel },
+            targetType: "user",
+            targetId: userId
+          });
+        }
       }
     }
   }

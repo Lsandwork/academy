@@ -1,5 +1,6 @@
 import type { AcademyLesson, AcademyTrack, TrackCategory } from "@/data/academyCourses";
 import type { WorksheetContent, WorksheetPageContent, WorksheetSection } from "./types";
+import { cgcWorksheetPages } from "./cgcContent";
 
 const MAX_TRACKER_ROWS = 5;
 const MAX_STEPS = 5;
@@ -41,6 +42,9 @@ function suppliesForLesson(lesson: AcademyLesson, category: TrackCategory): stri
     if (lesson.id === "fitness-and-body-awareness") return ["Non-slip mat", "Low platform or book", "Treats", "Timer"];
     if (lesson.id === "better-walks-through-sniffing") return ["Harness + leash", "Treat pouch", "Long line (optional)", "Notebook"];
     return ["Treat pouch", "Enrichment toys", "Mat", "Timer"];
+  }
+  if (category === "cgc") {
+    return ["6-ft leash", "Front-clip harness", "High-value treats", "Treat pouch", "Non-slip mat", "20-ft long line (recall)", "Soft brush (grooming item)"];
   }
   return ["High-value treats", "Quiet space", "Treat pouch"];
 }
@@ -803,7 +807,8 @@ export function buildWorksheetContent(lesson: AcademyLesson, track: AcademyTrack
   const category = track.category;
 
   let pages: WorksheetPageContent[];
-  if (lesson.id === "alone-time-assessment") pages = separationAssessmentPages(lesson, track);
+  if (track.id === "akc-cgc-prep") pages = cgcWorksheetPages(lesson, track);
+  else if (lesson.id === "alone-time-assessment") pages = separationAssessmentPages(lesson, track);
   else if (lesson.id === "building-alone-time-duration") pages = separationDurationPages(lesson, track);
   else if (category === "enrichment") pages = enrichmentPages(lesson, track);
   else pages = [coverPage(lesson, track, category), practicePage(lesson, category), reviewPage(lesson, category)];

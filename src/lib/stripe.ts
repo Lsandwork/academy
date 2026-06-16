@@ -2,14 +2,12 @@ import type { StripePlanId } from "./paymentProcessor";
 
 export type PlanId = StripePlanId;
 
-export function planToAccessLevel(plan: PlanId) {
+export function planToAccessLevel(plan: Exclude<PlanId, "cgc_prep" | "cgc_prep_eval">) {
   switch (plan) {
     case "single_lesson":
       return "SINGLE_LESSON" as const;
     case "monthly":
     case "premium":
-    case "cgc_prep":
-    case "cgc_prep_eval":
       return "MONTHLY" as const;
     case "lifetime":
       return "LIFETIME" as const;

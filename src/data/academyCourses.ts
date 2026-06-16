@@ -1,8 +1,9 @@
 import { stripeCheckoutPlans, type CheckoutPlanId } from "./pricingContent";
+import { akcCgcPrepLessons, akcCgcPrepTrack } from "./akcCgcPrep";
 
 export type AccessType = "free" | "single_lesson" | "monthly" | "lifetime";
 
-export type TrackCategory = "puppy" | "obedience" | "calm" | "separation" | "reactivity" | "enrichment";
+export type TrackCategory = "puppy" | "obedience" | "calm" | "separation" | "reactivity" | "enrichment" | "cgc";
 
 export interface AcademyTrack {
   id: string;
@@ -58,7 +59,8 @@ export const academyTracks: AcademyTrack[] = [
   { id: "calm-home-skills", title: "Calm Home Skills", subtitle: "Peaceful home, relaxed dog.", category: "calm", description: "Teach owners how to build better manners, less chaos, and more balance at home.", color: "#2E9E5B", icon: "⌂", lessonIds: ["building-an-off-switch", "polite-greetings", "barking-basics", "grooming-and-handling-prep", "vet-visit-confidence"] },
   { id: "separation-support", title: "Separation Support", subtitle: "Help your dog feel secure.", category: "separation", description: "Help owners understand the difference between normal alone-time training and true separation-related distress. This track teaches owners how to build alone-time comfort slowly, safely, and respectfully.", color: "#7C5CFF", icon: "♡", lessonIds: ["separation-anxiety-vs-normal-adjustment", "alone-time-assessment", "management-before-training", "departure-cue-desensitization", "building-alone-time-duration"] },
   { id: "leash-reactivity-reset", title: "Leash Reactivity Reset", subtitle: "Calmer walks, better days.", category: "reactivity", description: "Teach owners how to understand reactivity, create safer walks, reduce big reactions, and help their dog recover around triggers.", color: "#FFB020", icon: "↝", lessonIds: ["understanding-reactivity", "safety-and-walk-management", "thresholds", "look-at-that", "emergency-walk-skills", "better-leash-handling", "rebuilding-real-world-confidence"] },
-  { id: "fitdog-enrichment-at-home", title: "Fitdog Enrichment at Home", subtitle: "Healthy outlets for busy minds.", category: "enrichment", description: "This track supports mental stimulation, exercise, enrichment, active dog lifestyles, and better behavior through healthy outlets.", color: "#EF4444", icon: "●", lessonIds: ["enrichment-101", "fitness-and-body-awareness", "better-walks-through-sniffing"] }
+  { id: "fitdog-enrichment-at-home", title: "Fitdog Enrichment at Home", subtitle: "Healthy outlets for busy minds.", category: "enrichment", description: "This track supports mental stimulation, exercise, enrichment, active dog lifestyles, and better behavior through healthy outlets.", color: "#EF4444", icon: "●", lessonIds: ["enrichment-101", "fitness-and-body-awareness", "better-walks-through-sniffing"] },
+  akcCgcPrepTrack
 ];
 
 export const academyLessons: AcademyLesson[] = [
@@ -96,7 +98,8 @@ export const academyLessons: AcademyLesson[] = [
   { id: "rebuilding-real-world-confidence", trackId: "leash-reactivity-reset", title: "Rebuilding Real-World Confidence", durationMinutes: 26, summary: "Progress comes from controlled wins, not throwing the dog into chaos.", topics: [], progression: ["Trigger far away", "Trigger moving away", "Trigger standing still", "Trigger crossing path", "Trigger slightly closer", "Multiple triggers", "Busier environments"], takeaway: "Confidence is built by stacking successful experiences.", worksheetTitle: "Reactive Walk Confidence Plan", isFreePreview: false },
   { id: "enrichment-101", trackId: "fitdog-enrichment-at-home", title: "Enrichment 101", durationMinutes: 18, summary: "Enrichment is not a bonus. It is part of a healthy behavior plan.", topics: ["Food puzzles", "Sniff games", "Scatter feeding", "Training games", "Decompression walks", "Chewing", "Problem-solving"], takeaway: "Enrichment is not about making your dog tired. It is about helping your dog feel fulfilled.", worksheetTitle: "Enrichment Starter Plan", isFreePreview: false },
   { id: "fitness-and-body-awareness", trackId: "fitdog-enrichment-at-home", title: "Fitness and Body Awareness", durationMinutes: 20, summary: "A confident dog is not just mentally engaged. They are comfortable in their body, too.", topics: ["Safe movement", "Balance exercises", "Confidence with surfaces", "Low-impact conditioning", "Warmups and cooldowns", "When to ask a vet"], takeaway: "Fitness should build confidence, not push dogs past comfort or safety.", worksheetTitle: "Fitness and Body Awareness Checklist", isFreePreview: false },
-  { id: "better-walks-through-sniffing", trackId: "fitdog-enrichment-at-home", title: "Better Walks Through Sniffing", durationMinutes: 17, summary: "Sometimes the best walk is not the longest walk. It is the walk that lets your dog decompress.", topics: ["Why sniffing matters", "Structured walks versus decompression walks", "Sniff breaks as rewards", "Reducing leash frustration", "Walk planning"], takeaway: "A better walk gives your dog information, movement, and decompression.", worksheetTitle: "Better Walks Planning Guide", isFreePreview: false }
+  { id: "better-walks-through-sniffing", trackId: "fitdog-enrichment-at-home", title: "Better Walks Through Sniffing", durationMinutes: 17, summary: "Sometimes the best walk is not the longest walk. It is the walk that lets your dog decompress.", topics: ["Why sniffing matters", "Structured walks versus decompression walks", "Sniff breaks as rewards", "Reducing leash frustration", "Walk planning"], takeaway: "A better walk gives your dog information, movement, and decompression.", worksheetTitle: "Better Walks Planning Guide", isFreePreview: false },
+  ...akcCgcPrepLessons
 ];
 
 export const getTrack = (id: string) => academyTracks.find((track) => track.id === id);

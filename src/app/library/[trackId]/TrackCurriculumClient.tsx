@@ -8,8 +8,9 @@ import { AppHeader } from "@/components/AppHeader";
 import { TrackIcon } from "@/components/TrackIcon";
 import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { AcademyTrack, getLesson, lessonsForTrack } from "@/data/academyCourses";
+import { CGC_TRACK_ID } from "@/data/akcCgcPrep";
 import { getTrackAssets } from "@/assets/fitdogAcademyAssets";
-import { SafeUser, hasLessonAccess, parseJsonArray, trackProgress } from "@/lib/user";
+import { SafeUser, hasCgcCourseAccess, hasLessonAccess, parseJsonArray, trackProgress } from "@/lib/user";
 
 export default function TrackCurriculumClient({ track, user }: { track: AcademyTrack; user: SafeUser }) {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function TrackCurriculumClient({ track, user }: { track: AcademyT
   const completed = parseJsonArray(currentUser.completedLessonIds);
   const progress = trackProgress(currentUser, track.lessonIds);
   const { thumbnail } = getTrackAssets(track.id);
+  const isCgcTrack = track.id === CGC_TRACK_ID;
+  const cgcOwned = hasCgcCourseAccess(currentUser);
 
   const nextLesson = useMemo(() => {
     const last = currentUser.lastOpenedLessonId ? getLesson(currentUser.lastOpenedLessonId) : undefined;
@@ -89,6 +92,18 @@ export default function TrackCurriculumClient({ track, user }: { track: AcademyT
 
         {message && <p className="mt-4 rounded-xl bg-orange/10 px-4 py-3 text-sm font-semibold text-orange">{message}</p>}
 
+        {isCgcTrack && !cgcOwned && (
+          <div className="mt-6 rounded-3xl border border-orange/20 bg-orange/5 p-6">
+            <h2 className="text-lg font-black text-charcoal">AKC CGC Prep Program — paid course</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              All 10 CGC skill modules, premium worksheets with official criteria and test-day checklists, and trainer homework unlock when you enroll. Monthly membership does not include this certification track.
+            </p>
+            <Link href="/pricing/plans/akc-cgc-prep" className="mt-4 inline-flex rounded-full bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-dark">
+              Enroll — from $249
+            </Link>
+          </div>
+        )}
+
         <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black">Curriculum</h2>
           <div className="mt-4 divide-y divide-gray-100">
@@ -106,6 +121,10 @@ export default function TrackCurriculumClient({ track, user }: { track: AcademyT
                     {unlocked ? (
                       <Link href={`/library/${track.id}/lessons/${lesson.id}`} className="rounded-full bg-orange px-4 py-2 text-sm font-bold text-white">
                         {done ? "Review" : "Open Lesson"}
+                      </Link>
+                    ) : isCgcTrack ? (
+                      <Link href="/pricing/plans/akc-cgc-prep" className="rounded-full bg-orange/10 px-4 py-2 text-sm font-bold text-orange">
+                        Enroll to unlock
                       </Link>
                     ) : currentUser.creditBalance > 0 ? (
                       <button

@@ -30,6 +30,10 @@ export const STATIC_WORKSHEET_TRACKS = {
   "fitdog-enrichment-at-home": {
     dir: "content/worksheets/fitdog-enrichment-at-home",
     minBytes: 80_000
+  },
+  "akc-cgc-prep": {
+    dir: "content/worksheets/akc-cgc-prep",
+    minBytes: 80_000
   }
 } as const;
 

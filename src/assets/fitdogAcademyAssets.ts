@@ -27,7 +27,8 @@ export const fitdogAcademyAssets = {
     calmHomeSkills: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&auto=format&fit=crop&q=80",
     separationSupport: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=800&auto=format&fit=crop&q=80",
     leashReactivityReset: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
-    enrichmentAtHome: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80"
+    enrichmentAtHome: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
+    akcCgcPrep: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80"
   },
   icons: {
     course: {
@@ -94,6 +95,10 @@ export const trackAssetMap: Record<string, { thumbnail: string; icon: string }> 
   "fitdog-enrichment-at-home": {
     thumbnail: fitdogAcademyAssets.coursePhotos.enrichmentAtHome,
     icon: fitdogAcademyAssets.icons.course.enrichmentAtHome
+  },
+  "akc-cgc-prep": {
+    thumbnail: fitdogAcademyAssets.coursePhotos.akcCgcPrep,
+    icon: fitdogAcademyAssets.icons.course.everydayObedience
   }
 };
 

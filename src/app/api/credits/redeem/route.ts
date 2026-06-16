@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
 import { getLesson } from "@/data/academyCourses";
+import { cgcLessonIds } from "@/data/akcCgcPrep";
 import { logError } from "@/lib/errors";
 import { hasLessonAccess, parseJsonArray, toSafeUser } from "@/lib/user";
 
@@ -18,6 +19,13 @@ export async function POST(req: NextRequest) {
     const lesson = getLesson(lessonId);
     if (!lesson) {
       return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+    }
+
+    if (cgcLessonIds.includes(lessonId)) {
+      return NextResponse.json(
+        { error: "AKC CGC Prep is a paid certification course. Enroll from the CGC Prep plan page." },
+        { status: 400 }
+      );
     }
 
     if (hasLessonAccess(user, lessonId, lesson.isFreePreview)) {

@@ -7,10 +7,11 @@ import { AppHeader } from "@/components/AppHeader";
 import { TrackIcon } from "@/components/TrackIcon";
 import { FitdogAiChatWidget } from "@/components/ai/FitdogAiChatWidget";
 import { academyTracks, lessonsForTrack } from "@/data/academyCourses";
+import { CGC_TRACK_ID } from "@/data/akcCgcPrep";
 import { getTrackAssets } from "@/assets/fitdogAcademyAssets";
-import { SafeUser, parseJsonArray, trackProgress } from "@/lib/user";
+import { SafeUser, hasCgcCourseAccess, parseJsonArray, trackProgress } from "@/lib/user";
 
-const filters = ["All", "Puppy", "Obedience", "Behavior", "Lifestyle"] as const;
+const filters = ["All", "Puppy", "Obedience", "Behavior", "Lifestyle", "Certification"] as const;
 
 export default function LibraryClient({ user }: { user: SafeUser }) {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
@@ -21,7 +22,8 @@ export default function LibraryClient({ user }: { user: SafeUser }) {
       Puppy: ["puppy"],
       Obedience: ["obedience"],
       Behavior: ["calm", "separation", "reactivity"],
-      Lifestyle: ["enrichment"]
+      Lifestyle: ["enrichment"],
+      Certification: ["cgc"]
     };
     return academyTracks.filter((t) => (map[filter] || []).includes(t.category));
   }, [filter]);
@@ -55,6 +57,8 @@ export default function LibraryClient({ user }: { user: SafeUser }) {
             const lessons = lessonsForTrack(track.id);
             const progress = trackProgress(user, track.lessonIds);
             const { thumbnail } = getTrackAssets(track.id);
+            const isPaidCourse = track.id === CGC_TRACK_ID;
+            const cgcOwned = isPaidCourse && hasCgcCourseAccess(user);
 
             return (
               <Link
@@ -64,6 +68,11 @@ export default function LibraryClient({ user }: { user: SafeUser }) {
               >
                 <div className="relative h-40 overflow-hidden">
                   <Image src={thumbnail} alt={`${track.title} course`} fill className="object-cover transition group-hover:scale-105" sizes="400px" />
+                  {isPaidCourse && (
+                    <span className="absolute right-4 top-4 rounded-full bg-charcoal/90 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+                      {cgcOwned ? "Enrolled" : "$249 course"}
+                    </span>
+                  )}
                   <div className="absolute left-4 top-4 rounded-xl bg-white/95 p-2 shadow">
                     <TrackIcon trackId={track.id} size={28} />
                   </div>

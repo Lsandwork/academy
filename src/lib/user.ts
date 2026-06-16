@@ -1,4 +1,5 @@
 import { AccessLevel, Role, User } from "@prisma/client";
+import { cgcLessonIds } from "@/data/akcCgcPrep";
 
 export type SafeUser = Omit<User, "passwordHash">;
 
@@ -28,9 +29,18 @@ export function hasFullPaidAccess(user: Pick<SafeUser, "role" | "accessLevel">) 
   return user.accessLevel === AccessLevel.MONTHLY || user.accessLevel === AccessLevel.LIFETIME;
 }
 
+export function hasCgcCourseAccess(user: Pick<SafeUser, "role" | "purchasedLessonIds">) {
+  if (isAdmin(user) || isTrainer(user)) return true;
+  const purchased = parseJsonArray(user.purchasedLessonIds);
+  return cgcLessonIds.every((id) => purchased.includes(id));
+}
+
 export function hasLessonAccess(user: SafeUser, lessonId: string, isFreePreview: boolean) {
   if (isFreePreview) return true;
   if (isAdmin(user) || isTrainer(user)) return true;
+  if (cgcLessonIds.includes(lessonId)) {
+    return hasCgcCourseAccess(user);
+  }
   if (hasFullPaidAccess(user)) return true;
   return parseJsonArray(user.purchasedLessonIds).includes(lessonId);
 }
