@@ -28,7 +28,7 @@ export const fitdogAcademyAssets = {
     separationSupport: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=800&auto=format&fit=crop&q=80",
     leashReactivityReset: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
     enrichmentAtHome: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
-    akcCgcPrep: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80"
+    akcCgcPrep: "https://images.unsplash.com/photo-1683444066011-bb456c79d79d?w=800&auto=format&fit=crop&q=80&crop=entropy"
   },
   icons: {
     course: {
