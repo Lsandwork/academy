@@ -6,6 +6,7 @@ import { getLesson } from "@/data/academyCourses";
 import { SafeUser, accessLabel, parseJsonArray, roleLabel } from "@/lib/user";
 import type { AccessLevel, Role } from "@prisma/client";
 import type { DiagnosticStatus } from "@/lib/diagnostics";
+import { PaymentProcessorPanel } from "@/components/admin/PaymentProcessorPanel";
 
 type AdminUser = SafeUser & {
   recentCredits?: Array<{ id: string; amount: number; reason: string; createdAt: string; lessonId?: string | null }>;
@@ -54,7 +55,12 @@ type AdminNotificationRow = {
   createdAt: string;
 };
 
-const tabs = ["overview", "users", "credits", "trainers", "diagnostics", "logs"] as const;
+const tabs = ["overview", "users", "credits", "trainers", "payment-processor", "diagnostics", "logs"] as const;
+
+function tabLabel(tab: (typeof tabs)[number]) {
+  if (tab === "payment-processor") return "Payment Processor";
+  return tab;
+}
 
 const roleOptions: { value: Role; label: string; description: string }[] = [
   { value: "USER", label: "Standard user", description: "Regular academy member — library, lessons, and messaging." },
@@ -476,10 +482,10 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
             <button
               key={t}
               onClick={() => setTab(t)}
-              disabled={!isAdmin && (t === "credits" || t === "diagnostics" || t === "logs")}
+              disabled={!isAdmin && (t === "credits" || t === "payment-processor" || t === "diagnostics" || t === "logs")}
               className={`rounded-full px-4 py-2 text-sm font-bold capitalize ${tab === t ? "bg-orange text-white" : "bg-white border border-gray-200 text-charcoal disabled:opacity-40"}`}
             >
-              {t}
+              {tabLabel(t)}
             </button>
           ))}
         </div>
@@ -857,6 +863,8 @@ export default function AdminPanelClient({ user, isAdmin }: { user: SafeUser; is
           </div>
           </>
         )}
+
+        {tab === "payment-processor" && isAdmin && <PaymentProcessorPanel />}
 
         {tab === "diagnostics" && isAdmin && (
           <div className="mt-8 space-y-6">

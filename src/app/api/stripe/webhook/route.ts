@@ -4,14 +4,15 @@ import { logUserActivity } from "@/lib/activityLog";
 import { logError } from "@/lib/errors";
 import { parseJsonArray } from "@/lib/user";
 import { prisma } from "@/lib/db";
-import { planToAccessLevel, stripe } from "@/lib/stripe";
+import { PlanId, getStripeClient, getWebhookSecret, planToAccessLevel } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
+  const stripe = await getStripeClient();
   if (!stripe) return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
 
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = await getWebhookSecret();
 
   if (!sig || !secret) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 400 });
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
-    const planId = session.metadata?.planId as "single_lesson" | "monthly" | "lifetime" | undefined;
+    const planId = session.metadata?.planId as PlanId | undefined;
     const lessonId = session.metadata?.lessonId;
 
     if (userId && planId) {

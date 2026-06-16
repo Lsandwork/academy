@@ -6,7 +6,7 @@ import { runDiagnostics } from "@/lib/diagnostics";
 import { logError } from "@/lib/errors";
 import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
 import { hasLessonAccess } from "@/lib/user";
-import { stripe, stripePrices } from "@/lib/stripe";
+import { getStripeClient, getStripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 import { sendTrainerTestEmail } from "@/lib/trainerNotify";
 import { getLessonWorksheetPdf } from "@/lib/worksheets/getWorksheetPdf";
@@ -42,15 +42,17 @@ export async function POST(req: NextRequest) {
       }
 
       case "test_payments": {
+        const stripe = await getStripeClient();
+        const stripePrices = await getStripePrices();
         if (!stripe) {
           return NextResponse.json({ ok: false, action, message: "Stripe not configured." });
         }
-        const missing = pricingPlans.filter((p) => !stripePrices[p.id]).map((p) => p.title);
+        const missing = pricingPlans.filter((p) => !stripePrices[p.id as keyof typeof stripePrices]).map((p) => p.title);
         return NextResponse.json({
           ok: missing.length === 0,
           action,
-          message: missing.length ? `Missing price IDs: ${missing.join(", ")}` : "All 3 pricing products configured.",
-          plans: pricingPlans.map((p) => ({ title: p.title, priceId: stripePrices[p.id] || null }))
+          message: missing.length ? `Missing price IDs: ${missing.join(", ")}` : "All pricing products configured.",
+          plans: pricingPlans.map((p) => ({ title: p.title, priceId: stripePrices[p.id as keyof typeof stripePrices] || null }))
         });
       }
 

@@ -3,7 +3,8 @@ import { recommendTrackFromAnswers } from "@/data/assessment";
 import { isTrainerEmailConfigured } from "@/lib/trainerNotify";
 import { prisma } from "@/lib/db";
 import { getLessonVideoUrl, isVideoCdnConfigured } from "@/lib/lessonMedia";
-import { stripe, stripePrices } from "@/lib/stripe";
+import { resolveStripeConfig } from "@/lib/paymentProcessor";
+import { getStripePrices } from "@/lib/stripe";
 import { fitdogAcademyAssets } from "@/assets/fitdogAcademyAssets";
 
 export type DiagnosticStatus = "healthy" | "warning" | "critical" | "not_configured";
@@ -40,8 +41,10 @@ export async function runDiagnostics() {
     dbStatus = "critical";
   }
 
-  const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-  const webhookConfigured = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  const stripeConfig = await resolveStripeConfig();
+  const stripeConfigured = Boolean(stripeConfig.secretKey && stripeConfig.publishableKey);
+  const webhookConfigured = Boolean(stripeConfig.webhookSecret);
+  const stripePrices = await getStripePrices();
   const priceIds = Object.entries(stripePrices).filter(([, v]) => v);
   const userCount = dbStatus === "healthy" ? await prisma.user.count() : 0;
   const adminCount = dbStatus === "healthy" ? await prisma.user.count({ where: { role: "ADMIN" } }) : 0;
@@ -241,7 +244,7 @@ export async function runDiagnostics() {
       items: [
         { label: "Admin panel", status: "healthy", detail: "Staff/Admin protected" },
         { label: "Diagnostics", status: "healthy", detail: "Admin-only route" },
-        { label: "Stripe secret", status: process.env.STRIPE_SECRET_KEY ? "healthy" : "not_configured", detail: "Server-side only" },
+        { label: "Stripe secret", status: stripeConfig.secretKey ? "healthy" : "not_configured", detail: stripeConfig.source === "database" ? "Admin panel config" : "Server-side only" },
         { label: "Session secret", status: process.env.SESSION_SECRET ? "healthy" : "warning", detail: "Configured in env" }
       ]
     },
@@ -282,7 +285,7 @@ export async function runDiagnostics() {
       { label: "Access Control", status: "healthy", detail: "Locked content protected" },
       { label: "Videos", status: videosConnected ? "warning" : "not_configured", detail: `${videosConnected} / ${academyLessons.length} videos connected` },
       { label: "Worksheets", status: "healthy", detail: `${academyLessons.length} premium PDF worksheets (all lessons)` },
-      { label: "Payments", status: stripeConfigured ? "healthy" : "not_configured", detail: stripe ? "Stripe client ready" : "Not configured" },
+      { label: "Payments", status: stripeConfigured ? "healthy" : "not_configured", detail: stripeConfigured ? `Stripe ready (${stripeConfig.source})` : "Not configured" },
       { label: "Users", status: "healthy", detail: "Login and signup healthy" },
       { label: "Progress", status: "healthy", detail: "Tracking active" },
       { label: "Landing Page", status: "healthy", detail: "Branding assets wired" },

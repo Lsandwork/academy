@@ -1,19 +1,6 @@
-import Stripe from "stripe";
+import type { StripePlanId } from "./paymentProcessor";
 
-export const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null;
-
-export const stripePrices = {
-  single_lesson: process.env.STRIPE_PRICE_SINGLE_LESSON || "",
-  monthly: process.env.STRIPE_PRICE_MONTHLY || "",
-  premium: process.env.STRIPE_PRICE_PREMIUM || "",
-  lifetime: process.env.STRIPE_PRICE_LIFETIME || "",
-  cgc_prep: process.env.STRIPE_PRICE_CGC_PREP || "",
-  cgc_prep_eval: process.env.STRIPE_PRICE_CGC_PREP_EVAL || ""
-} as const;
-
-export type PlanId = keyof typeof stripePrices;
+export type PlanId = StripePlanId;
 
 export function planToAccessLevel(plan: PlanId) {
   switch (plan) {
@@ -28,3 +15,23 @@ export function planToAccessLevel(plan: PlanId) {
       return "LIFETIME" as const;
   }
 }
+
+export {
+  getStripeClient,
+  getStripePrices,
+  getWebhookSecret,
+  resolveStripeConfig
+} from "./paymentProcessor";
+
+/** @deprecated Use getStripeClient() */
+export const stripe = null;
+
+/** @deprecated Use getStripePrices() */
+export const stripePrices = {
+  single_lesson: process.env.STRIPE_PRICE_SINGLE_LESSON || "",
+  monthly: process.env.STRIPE_PRICE_MONTHLY || "",
+  premium: process.env.STRIPE_PRICE_PREMIUM || "",
+  lifetime: process.env.STRIPE_PRICE_LIFETIME || "",
+  cgc_prep: process.env.STRIPE_PRICE_CGC_PREP || "",
+  cgc_prep_eval: process.env.STRIPE_PRICE_CGC_PREP_EVAL || ""
+} as const;

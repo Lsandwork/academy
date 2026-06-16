@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { logUserActivity } from "@/lib/activityLog";
 import { prisma } from "@/lib/db";
-import { PlanId, stripe, stripePrices } from "@/lib/stripe";
+import { PlanId, getStripeClient, getStripePrices, planToAccessLevel } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   let user;
@@ -12,9 +12,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
+  const stripe = await getStripeClient();
+  const stripePrices = await getStripePrices();
+
   if (!stripe) {
     return NextResponse.json({
-      error: "Stripe is not configured. Add STRIPE_SECRET_KEY and price IDs to .env — see .env.example."
+      error: "Stripe is not configured. Add keys in Admin → Payment Processor or set STRIPE_SECRET_KEY in environment."
     }, { status: 503 });
   }
 
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const priceId = stripePrices[planId];
   if (!priceId) {
-    return NextResponse.json({ error: `Missing Stripe price for ${planId}. Set STRIPE_PRICE_${planId.toUpperCase()} in .env.` }, { status: 503 });
+    return NextResponse.json({ error: `Missing Stripe price for ${planId}. Add it in Admin → Payment Processor.` }, { status: 503 });
   }
 
   let customerId = user.stripeCustomerId;

@@ -253,3 +253,18 @@ model UserActivityLog {
   @@index([action])
   @@schema("academy")
 }
+
+model PaymentProcessorSettings {
+  id           String    @id @default(cuid())
+  provider     String    @unique
+  enabled      Boolean   @default(false)
+  config       String    @default("{}")
+  status       String    @default("not_configured")
+  lastTestedAt DateTime?
+  lastError    String?
+  updatedById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@schema("academy")
+}
