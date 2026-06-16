@@ -1,10 +1,5 @@
 const base = "/assets/fitdog-academy";
 
-/** Wide banner crop for library/landing cards (~2.4:1), centered — prevents stretch on portrait photos. */
-export function courseCardPhoto(photoSlug: string, focalY = 0.5) {
-  return `https://images.unsplash.com/${photoSlug}?w=1200&h=500&auto=format&fit=crop&q=80&crop=focalpoint&fp-x=0.5&fp-y=${focalY}`;
-}
-
 export const fitdogAcademyAssets = {
   logos: {
     dogHead: `${base}/logos/fitdog-dog-head-orange-transparent.png`,
@@ -33,7 +28,8 @@ export const fitdogAcademyAssets = {
     separationSupport: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=800&auto=format&fit=crop&q=80",
     leashReactivityReset: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
     enrichmentAtHome: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
-    akcCgcPrep: courseCardPhoto("photo-1516734212184-f0162d1671be", 0.45)
+    /** Hosted locally — Unsplash hotlink was 404; wide crop baked into file */
+    akcCgcPrep: `${base}/courses/akc-cgc-prep.jpg`
   },
   icons: {
     course: {
