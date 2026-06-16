@@ -20,7 +20,7 @@ export function LandingTrackCard({ track, loggedIn }: { track: AcademyTrack; log
           alt={`${track.title} course`}
           fill
           sizes="(max-width:768px) 100vw, 33vw"
-          className="object-cover transition duration-500 group-hover:scale-105"
+          className="object-cover object-center transition duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#161b22] via-transparent to-transparent" />
         <span className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 p-1.5 shadow-lg">

@@ -67,7 +67,7 @@ export default function LibraryClient({ user }: { user: SafeUser }) {
                 className="group overflow-hidden rounded-3xl bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="relative h-40 overflow-hidden">
-                  <Image src={thumbnail} alt={`${track.title} course`} fill className="object-cover transition group-hover:scale-105" sizes="400px" />
+                  <Image src={thumbnail} alt={`${track.title} course`} fill className="object-cover object-center transition group-hover:scale-105" sizes="400px" />
                   {isPaidCourse && (
                     <span className="absolute right-4 top-4 rounded-full bg-charcoal/90 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white">
                       {cgcOwned ? "Enrolled" : "$249 course"}

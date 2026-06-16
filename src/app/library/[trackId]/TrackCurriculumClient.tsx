@@ -61,7 +61,7 @@ export default function TrackCurriculumClient({ track, user }: { track: AcademyT
 
         <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">
           <div className="relative h-48 w-full">
-            <Image src={thumbnail} alt={`${track.title} course`} fill className="object-cover" priority sizes="800px" />
+            <Image src={thumbnail} alt={`${track.title} course`} fill className="object-cover object-center" priority sizes="800px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <div className="mb-2"><TrackIcon trackId={track.id} size={36} /></div>

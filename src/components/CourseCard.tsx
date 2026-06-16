@@ -14,7 +14,7 @@ export function CourseCard({ track, href }: { track: AcademyTrack; href: string 
           alt={`${track.title} course`}
           fill
           sizes="(max-width:768px) 100vw, 33vw"
-          className="object-cover transition group-hover:scale-105"
+          className="object-cover object-center transition group-hover:scale-105"
         />
         <span className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 p-1 shadow">
           <Image src={icon} alt="" width={24} height={24} aria-hidden />
